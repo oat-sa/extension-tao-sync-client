@@ -37,15 +37,15 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
 
     public function getQueued($limit = 0)
     {
-        $sql = 'SELECT * FROM ' . self::TABLE_NAME . ' WHERE ' . self::PARAM_SYNCHRONIZED . '= ? ORDER BY ' . self::PARAM_ID . ' LIMIT ?';
-        $parameters = [0, $limit];
+        $sql = 'SELECT * FROM ' . self::TABLE_NAME . ' WHERE ' . self::PARAM_SYNC_ID . ' = ? ORDER BY ' . self::PARAM_ID . ' LIMIT ?';
+        $parameters = ['', $limit];
         $stmt = $this->getPersistence()->query($sql, $parameters);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function getAll($limit = 1000, $offset = 0)
     {
-        $sql = 'SELECT * FROM ' . self::TABLE_NAME . '= ? ORDER BY ' . self::PARAM_ID . ' LIMIT ? OFFSET ?';
+        $sql = 'SELECT * FROM ' . self::TABLE_NAME . ' ORDER BY ' . self::PARAM_ID . ' LIMIT ? OFFSET ?';
         $parameters = [0];
         $stmt = $this->getPersistence()->query($sql, $parameters);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -101,6 +101,7 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
             $table->addIndex([self::PARAM_CREATED_AT], 'IDX_' . self::TABLE_NAME . '_created_at');
             $table->addIndex([self::PARAM_UPDATED_AT], 'IDX_' . self::TABLE_NAME . '_updated_at');
         } catch (SchemaException $e) {
+            $this->dropStorage();
             common_Logger::i('Database Schema for '.self::TABLE_NAME.' already up to date.');
             return false;
         }
@@ -124,7 +125,7 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
         try {
             $schema->dropTable(self::TABLE_NAME);
         } catch (SchemaException $e) {
-            common_Logger::i('Database Schema for DeliveryLog can\'t be dropped.');
+            common_Logger::i('Database Schema for '.self::TABLE_NAME.' can\'t be dropped.');
         }
 
         $queries = $persistence->getPlatform()->getMigrateSchemaSql($fromSchema, $schema);

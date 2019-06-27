@@ -37,7 +37,9 @@ return array(
         array('grant', 'http://www.tao.lu/Ontologies/generis.rdf#taoSyncClientManager', array('ext'=>'taoSyncClient')),
     ),
     'install' => array(
-        RegisterSyncQueueRds::class,
+        'php' => [
+                RegisterSyncQueueRds::class,
+            ]
     ),
     'uninstall' => array(
     ),

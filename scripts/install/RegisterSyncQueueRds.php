@@ -48,7 +48,9 @@ class RegisterSyncQueueRds extends InstallAction
         $syncQueueStorageClass = $syncQueueService->getOption(SyncQueueService::OPTION_SYNC_QUEUE_STORAGE);
         $syncQueueStorageParams = $syncQueueService->getOption(SyncQueueService::OPTION_SYNC_QUEUE_STORAGE_PARAMS);
 
+        /** @var SyncQueueStorageRds $storage */
         $storage = new $syncQueueStorageClass([SyncQueueStorageRds::OPTION_PERSISTENCE => current($syncQueueStorageParams)]);
+        $storage->setServiceLocator($syncQueueService->getServiceLocator());
         $storage->createStorage();
 
         $this->getServiceManager()->register(SyncQueueService::SERVICE_ID, $syncQueueService);

@@ -101,7 +101,7 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
             $table->addIndex([self::PARAM_CREATED_AT], 'IDX_' . self::TABLE_NAME . '_created_at');
             $table->addIndex([self::PARAM_UPDATED_AT], 'IDX_' . self::TABLE_NAME . '_updated_at');
         } catch (SchemaException $e) {
-            common_Logger::i('Database Schema for DeliveryLog already up to date.');
+            common_Logger::i('Database Schema for '.self::TABLE_NAME.' already up to date.');
             return false;
         }
 

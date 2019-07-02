@@ -30,7 +30,8 @@ return array(
     'version' => '0.1.0',
     'author' => 'Open Assessment Technologies SA',
     'requires' => array(
-        'tao' => '>=37.1.1'
+        'tao' => '>=37.1.1',
+        'taoLti' => '>=10.1.0',
     ),
     'managementRole' => 'http://www.tao.lu/Ontologies/generis.rdf#taoSyncClientManager',
     'acl' => array(

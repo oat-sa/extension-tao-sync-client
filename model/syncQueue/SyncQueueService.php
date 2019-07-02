@@ -23,6 +23,10 @@ namespace oat\taoSyncClient\model\syncQueue;
 
 
 use oat\oatbox\service\ConfigurableService;
+use oat\taoSyncClient\model\syncQueue\exception\SyncClientSyncQueueException;
+use oat\taoSyncClient\model\syncQueue\storage\SyncQueueStorageInterface;
+use ReflectionClass;
+use ReflectionException;
 
 /**
  * Controls synchronisation from client to server
@@ -32,9 +36,71 @@ use oat\oatbox\service\ConfigurableService;
 class SyncQueueService extends ConfigurableService implements SyncQueueInterface
 {
 
+    /**
+     * @var SyncQueueStorageInterface
+     */
+    private $storageService;
+
     public function send($serverId, $limit = 0)
     {
         // TODO: Implement send() method.
     }
 
+    /**
+     * @param array $params
+     * @return mixed|void
+     * @throws SyncClientSyncQueueException
+     */
+    public function addTask($params = [])
+    {
+        $this->validate($params);
+        $this->getStorageService()->insert($params);
+    }
+
+    /**
+     * @param array $params
+     * @throws SyncClientSyncQueueException
+     */
+    protected function validate(array $params)
+    {
+        if (!array_key_exists(SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID, $params)) {
+            throw new SyncClientSyncQueueException('Synchronizable Resource Id is not set');
+        }
+        if (!array_key_exists(SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_TYPE, $params)) {
+            throw new SyncClientSyncQueueException('Synchronizable Type is not set');
+        }
+        if (!array_key_exists(SyncQueueStorageInterface::PARAM_EVENT_TYPE, $params)) {
+            throw new SyncClientSyncQueueException('Event Type is not set');
+        }
+    }
+
+    /**
+     * @return SyncQueueStorageInterface
+     * @throws SyncClientSyncQueueException
+     * @return SyncQueueStorageInterface
+     * @throws SyncClientSyncQueueException
+     */
+    protected function getStorageService()
+    {
+        if (!$this->storageService) {
+            $storageServiceClass = $this->getOption(self::OPTION_SYNC_QUEUE_STORAGE);
+            $hasStorage = true;
+            try {
+                $reflection = new ReflectionClass($storageServiceClass);
+                if ($reflection->implementsInterface(SyncQueueStorageInterface::class)) {
+                    /** @var SyncQueueStorageInterface storageService */
+                    $this->storageService = new $storageServiceClass($this->getOption(self::OPTION_SYNC_QUEUE_STORAGE_PARAMS));
+                    $this->storageService->setServiceLocator($this->getServiceLocator());
+                } else {
+                    $hasStorage = false;
+                }
+            } catch (ReflectionException $e) {
+                $hasStorage = false;
+            }
+            if (!$hasStorage) {
+                throw new SyncClientSyncQueueException('taoSyncClient SyncQueueStorage is not initialized');
+            }
+        }
+        return $this->storageService;
+    }
 }

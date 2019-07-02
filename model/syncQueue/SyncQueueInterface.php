@@ -21,6 +21,9 @@
 
 namespace oat\taoSyncClient\model\syncQueue;
 
+
+use oat\taoSyncClient\model\syncQueue\exception\SyncClientSyncQueueException;
+
 /**
  * Controls synchronization from client to server
  * Interface SyncQueueInterface
@@ -33,6 +36,12 @@ interface SyncQueueInterface
     const OPTION_SYNC_QUEUE_STORAGE = 'storage';
     const OPTION_SYNC_QUEUE_STORAGE_PARAMS = 'storage_params';
 
+    const PARAM_EVENT_TYPE_LTI_USER_CREATED = 'lti_user_created';
+    const PARAM_EVENT_TYPE_LTI_USER_UPDATED = 'lti_user_updated';
+    const PARAM_EVENT_TYPE_RESULTS = 'results';
+    const PARAM_EVENT_TYPE_DELIVERY_LOG = 'delivery_log';
+    const PARAM_EVENT_TYPE_TEST_SESSION = 'test_session';
+
     /**
      * Send not synchronized data to server
      * @param string $serverId - unique server identifier
@@ -40,4 +49,11 @@ interface SyncQueueInterface
      * @return bool
      */
     public function send($serverId, $limit = 0);
+
+    /**
+     * @param array $params
+     * @return mixed
+     * @throws SyncClientSyncQueueException
+     */
+    public function addTask($params = []);
 }

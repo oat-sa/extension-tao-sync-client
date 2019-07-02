@@ -59,5 +59,5 @@ interface SyncQueueStorageInterface
      * @param $id
      * @return mixed
      */
-    public function markAsSynced($id);
+    public function setSyncId($id);
 }

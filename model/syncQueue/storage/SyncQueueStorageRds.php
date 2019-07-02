@@ -35,6 +35,16 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
     const TABLE_NAME = 'sync_client_queue';
     const OPTION_PERSISTENCE = 'persistence';
 
+    public function __construct($options = array())
+    {
+        // if initialized within other service we need to rewrite config
+        if (!array_key_exists(self::OPTION_PERSISTENCE, $options)
+            && array_key_exists(0, $options) && count($options) === 1) {
+            $options = [self::OPTION_PERSISTENCE => current($options)];
+        }
+        parent::__construct($options);
+    }
+
     public function getQueued($limit = 0)
     {
         $sql = 'SELECT * FROM ' . self::TABLE_NAME . ' WHERE ' . self::PARAM_SYNC_ID . ' = ? ORDER BY ' . self::PARAM_ID . ' LIMIT ?';
@@ -56,10 +66,10 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
         return $this->getPersistence()->insert(self::TABLE_NAME, $action);
     }
 
-    public function markAsSynced($id)
+    public function setSyncId($id)
     {
-        $sql = 'UPDATE ' . self::TABLE_NAME . ' SET ' . self::PARAM_SYNCHRONIZED . ' = ?, '.self::PARAM_UPDATED_AT.'= ? WHERE ' . self::PARAM_ID . '= ?';
-        $parameters = [1, time(), $id];
+        $sql = 'UPDATE ' . self::TABLE_NAME . ' SET ' . self::PARAM_SYNC_ID . ' = ?, '.self::PARAM_UPDATED_AT.'= ? WHERE ' . self::PARAM_ID . '= ?';
+        $parameters = [1, date('Y-m-d H:i:s'), $id];
         return $this->getPersistence()->exec($sql, $parameters);
     }
 
@@ -85,6 +95,8 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
 
         try {
             $table = $schema->createTable(self::TABLE_NAME);
+            $table->addOption('charset', 'utf8');
+            $table->addOption('collate', 'utf8_unicode_ci');
             $table->addOption('engine', 'InnoDB');
             $table->addColumn(self::PARAM_ID, 'integer', ['notnull' => true, 'autoincrement' => true]);
             $table->addColumn(self::PARAM_SYNCHRONIZABLE_ID, 'string', ['notnull' => true, 'length' => 255]);

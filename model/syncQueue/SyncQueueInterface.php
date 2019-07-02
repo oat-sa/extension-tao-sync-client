@@ -42,6 +42,9 @@ interface SyncQueueInterface
     const PARAM_EVENT_TYPE_DELIVERY_LOG = 'delivery_log';
     const PARAM_EVENT_TYPE_TEST_SESSION = 'test_session';
 
+    const PARAM_SYNCHRONIZABLE_TYPE_LTI_USER = 'lti_user';
+    const TYPE_SYNCHRONIZABLE_TYPE_DELIVERY_LOG = 'delivery_log';
+
     /**
      * Send not synchronized data to server
      * @param string $serverId - unique server identifier

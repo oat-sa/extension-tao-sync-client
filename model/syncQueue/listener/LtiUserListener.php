@@ -22,15 +22,13 @@
 namespace oat\taoSyncClient\model\syncQueue\listener;
 
 
-use oat\oatbox\service\ServiceManager;
-use oat\oatbox\user\User;
 use oat\taoLti\models\classes\user\events\LtiUserCreatedEvent;
 use oat\taoLti\models\classes\user\events\LtiUserUpdatedEvent;
 use oat\taoSyncClient\model\syncQueue\exception\SyncClientSyncQueueException;
 use oat\taoSyncClient\model\syncQueue\storage\SyncQueueStorageInterface;
 use oat\taoSyncClient\model\syncQueue\SyncQueueInterface;
 
-class LtiUserListener
+class LtiUserListener extends AbstractSyncQueueListener
 {
     const PARAM_USER_ID = 'userId';
     const PARAM_EVENT = 'event';
@@ -67,18 +65,10 @@ class LtiUserListener
     {
         self::getSyncQueueService()->addTask([
             SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID => $params[self::PARAM_USER_ID],
-            SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_TYPE => User::class,
+            SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_TYPE => SyncQueueInterface::PARAM_SYNCHRONIZABLE_TYPE_LTI_USER,
             SyncQueueStorageInterface::PARAM_EVENT_TYPE => $params[self::PARAM_EVENT],
             SyncQueueStorageInterface::PARAM_CREATED_AT => date('Y-m-d H:i:s'),
             SyncQueueStorageInterface::PARAM_UPDATED_AT => date('Y-m-d H:i:s'),
         ]);
-    }
-
-    /**
-     * @return SyncQueueInterface
-     */
-    private static function getSyncQueueService()
-    {
-        return ServiceManager::getServiceManager()->get(SyncQueueInterface::SERVICE_ID);
     }
 }

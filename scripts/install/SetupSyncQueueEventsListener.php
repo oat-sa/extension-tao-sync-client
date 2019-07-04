@@ -24,6 +24,7 @@ namespace oat\taoSyncClient\scripts\install;
 
 use common_report_Report;
 use oat\oatbox\extension\InstallAction;
+use oat\taoDelivery\models\classes\execution\event\DeliveryExecutionCreated;
 use oat\taoDelivery\models\classes\execution\event\DeliveryExecutionState;
 use oat\taoLti\models\classes\user\events\LtiUserCreatedEvent;
 use oat\taoLti\models\classes\user\events\LtiUserUpdatedEvent;
@@ -31,6 +32,7 @@ use oat\taoProctoring\model\deliveryLog\event\DeliveryLogEvent;
 use oat\taoSyncClient\model\syncQueue\listener\DeliveryLogListener;
 use oat\taoSyncClient\model\syncQueue\listener\LtiUserListener;
 use oat\taoSyncClient\model\syncQueue\listener\ResultsListener;
+use oat\taoSyncClient\model\syncQueue\listener\TestSessionListener;
 
 class SetupSyncQueueEventsListener extends InstallAction
 {
@@ -46,8 +48,9 @@ class SetupSyncQueueEventsListener extends InstallAction
         // results
         $this->registerEvent(DeliveryExecutionState::class, [ResultsListener::class, 'deliveryExecutionStateChanged']);
 
-        // todo test sessions
-
+        // test session
+        $this->registerEvent(DeliveryExecutionState::class, [TestSessionListener::class, 'deliveryExecutionStateChanged']);
+        $this->registerEvent(DeliveryExecutionCreated::class, [TestSessionListener::class, 'deliveryExecutionStateChanged']);
 
         return common_report_Report::createSuccess(__('Registered SyncQueue Events listeners'));
     }

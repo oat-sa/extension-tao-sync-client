@@ -22,25 +22,35 @@
 namespace oat\taoSyncClient\model\syncQueue\listener;
 
 
-use common_Exception;
-use common_Logger;
-use oat\taoDelivery\model\execution\DeliveryExecutionInterface;
 use oat\taoDelivery\models\classes\execution\event\DeliveryExecutionState;
+use oat\taoSyncClient\model\syncQueue\exception\SyncClientSyncQueueException;
+use oat\taoSyncClient\model\syncQueue\storage\SyncQueueStorageInterface;
+use oat\taoSyncClient\model\syncQueue\SyncQueueInterface;
+use oat\taoSyncClient\model\syncResults\SyncResultsInterface;
 
 class ResultsListener extends AbstractSyncQueueListener
 {
+    /**
+     * @param DeliveryExecutionState $event
+     * @throws \common_exception_NotFound
+     * @throws SyncClientSyncQueueException
+     */
     public static function deliveryExecutionStateChanged(DeliveryExecutionState $event)
     {
-        if (!self::isServiceActive()) {
-            return;
+        $states = self::getSyncResultsService()->getOption(SyncResultsInterface::OPTION_STATUS_EXECUTIONS_TO_SYNC);
+        if (is_array($states) && in_array($event->getState(), $states, true)) {
+            self::getSyncQueueService()->addTask([
+                SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID => $event->getDeliveryExecution()->getIdentifier(),
+                SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_TYPE => SyncQueueInterface::PARAM_SYNCHRONIZABLE_TYPE_DELIVERY_EXECUTION,
+                SyncQueueStorageInterface::PARAM_EVENT_TYPE => SyncQueueInterface::PARAM_EVENT_TYPE_RESULTS,
+                SyncQueueStorageInterface::PARAM_CREATED_AT => date('Y-m-d H:i:s'),
+                SyncQueueStorageInterface::PARAM_UPDATED_AT => date('Y-m-d H:i:s'),
+            ]);
         }
-        try {
-            if ($event->getState() === DeliveryExecutionInterface::STATE_FINISHED) {
-                self::service()->addFinishedExecution($event->getDeliveryExecution()->getDelivery()->getUri());
-            }
-        } catch (common_Exception $e) {
-            // failure in event should not stop execution
-            common_Logger::e('Failed to processing data (on adding sync queue record in results listener)');
-        }
+    }
+
+    public static function getSyncResultsService()
+    {
+        return self::getServiceManager()->get(SyncResultsInterface::SERVICE_ID);
     }
 }

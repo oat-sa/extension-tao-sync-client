@@ -40,11 +40,14 @@ class SetupSyncQueueEventsListener extends InstallAction
         $this->registerEvent(LtiUserCreatedEvent::class, [LtiUserListener::class, 'create']);
         $this->registerEvent(LtiUserUpdatedEvent::class, [LtiUserListener::class, 'update']);
 
-        // results
-        // $this->registerEvent(DeliveryExecutionState::class, [ResultsListener::class, 'deliveryExecutionStateChanged']);
-
         // delivery log
         $this->registerEvent(DeliveryLogEvent::class, [DeliveryLogListener::class, 'create']);
+
+        // results
+        $this->registerEvent(DeliveryExecutionState::class, [ResultsListener::class, 'deliveryExecutionStateChanged']);
+
+        // todo test sessions
+
 
         return common_report_Report::createSuccess(__('Registered SyncQueue Events listeners'));
     }

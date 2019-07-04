@@ -44,6 +44,7 @@ interface SyncQueueInterface
 
     const PARAM_SYNCHRONIZABLE_TYPE_LTI_USER = 'lti_user';
     const TYPE_SYNCHRONIZABLE_TYPE_DELIVERY_LOG = 'delivery_log';
+    const PARAM_SYNCHRONIZABLE_TYPE_DELIVERY_EXECUTION = 'delivery_execution';
 
     /**
      * Send not synchronized data to server

@@ -32,6 +32,7 @@ return array(
     'requires' => array(
         'tao' => '>=37.1.1',
         'taoLti' => '>=10.1.0',
+        'taoProctoring' => '>=15.2.0',
     ),
     'managementRole' => 'http://www.tao.lu/Ontologies/generis.rdf#taoSyncClientManager',
     'acl' => array(

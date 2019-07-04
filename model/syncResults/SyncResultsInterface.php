@@ -19,27 +19,12 @@
  * @author Oleksandr Zagovorychev <zagovorichev@gmail.com>
  */
 
-namespace oat\taoSyncClient\model\syncQueue\listener;
+namespace oat\taoSyncClient\model\syncResults;
 
 
-use oat\oatbox\service\ServiceManager;
-use oat\taoSyncClient\model\syncQueue\SyncQueueInterface;
-
-class AbstractSyncQueueListener
+interface SyncResultsInterface
 {
-    /**
-     * @return SyncQueueInterface
-     */
-    protected static function getSyncQueueService()
-    {
-        return self::getServiceManager()->get(SyncQueueInterface::SERVICE_ID);
-    }
+    const SERVICE_ID = 'taoSyncClient/syncResultsService';
 
-    /**
-     * @return ServiceManager
-     */
-    protected static function getServiceManager()
-    {
-        return ServiceManager::getServiceManager();
-    }
+    const OPTION_STATUS_EXECUTIONS_TO_SYNC = 'statusExecutionsToSync';
 }

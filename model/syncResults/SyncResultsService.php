@@ -19,27 +19,16 @@
  * @author Oleksandr Zagovorychev <zagovorichev@gmail.com>
  */
 
-namespace oat\taoSyncClient\model\syncQueue\listener;
+namespace oat\taoSyncClient\model\syncResults;
 
 
-use oat\oatbox\service\ServiceManager;
-use oat\taoSyncClient\model\syncQueue\SyncQueueInterface;
+use oat\oatbox\service\ConfigurableService;
 
-class AbstractSyncQueueListener
+/**
+ * Class SyncResultsService
+ * @package oat\taoSyncClient\model\syncResults
+ */
+class SyncResultsService extends ConfigurableService implements SyncResultsInterface
 {
-    /**
-     * @return SyncQueueInterface
-     */
-    protected static function getSyncQueueService()
-    {
-        return self::getServiceManager()->get(SyncQueueInterface::SERVICE_ID);
-    }
 
-    /**
-     * @return ServiceManager
-     */
-    protected static function getServiceManager()
-    {
-        return ServiceManager::getServiceManager();
-    }
 }

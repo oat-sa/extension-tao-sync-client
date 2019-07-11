@@ -19,12 +19,30 @@
  * @author Oleksandr Zagovorychev <zagovorichev@gmail.com>
  */
 
-namespace oat\taoSyncClient\model\syncResults;
+namespace oat\taoSyncClient\model\syncPackage;
 
 
-interface SyncResultsInterface
+interface SyncPackageInterface
 {
-    const SERVICE_ID = 'taoSyncClient/SyncResultsService';
+    const SERVICE_ID = 'taoSyncClient/syncPackageService';
 
-    const OPTION_STATUS_EXECUTIONS_TO_SYNC = 'statusExecutionsToSync';
+    /**
+     * Getting path to the folder with Generated packages for synchronization
+     * @return string
+     */
+    public function getPath();
+
+    /**
+     * Set another path as a storage
+     * @param $path string
+     * @return void
+     */
+    public function setPath($path = '');
+
+    /**
+     * Check if path could be used as a storage
+     * @return bool
+     */
+    public function checkPath();
+
 }

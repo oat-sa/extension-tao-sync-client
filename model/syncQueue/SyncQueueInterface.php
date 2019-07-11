@@ -31,7 +31,7 @@ use oat\taoSyncClient\model\syncQueue\exception\SyncClientSyncQueueException;
  */
 interface SyncQueueInterface
 {
-    const SERVICE_ID = 'taoSyncClient/syncQueueService';
+    const SERVICE_ID = 'taoSyncClient/SyncQueueService';
 
     const OPTION_SYNC_QUEUE_STORAGE = 'storage';
     const OPTION_SYNC_QUEUE_STORAGE_PARAMS = 'storage_params';

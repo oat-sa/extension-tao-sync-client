@@ -25,10 +25,13 @@ namespace oat\taoSyncClient\model\syncPackage;
 use common_exception_Error;
 use common_report_Report;
 use oat\oatbox\service\ConfigurableService;
+use oat\taoLti\models\classes\user\LtiUserService;
+use oat\taoSyncClient\model\syncQueue\SyncQueueInterface;
 
 class SyncPackageService extends ConfigurableService implements SyncPackageInterface
 {
     const OPTION_STORAGE = 'storage';
+    const OPTION_SERVICE_PROVIDER = '';
     const OPTION_SYNC_QUEUE = 'sync-queue';
 
     const PARAM_LTI_USER = 'lti-user';
@@ -44,6 +47,9 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
         return $this->getOption(self::OPTION_STORAGE);
     }
 
+    /**
+     * @return SyncQueueInterface
+     */
     public function getSyncQueueService()
     {
         return $this->getOption(self::OPTION_SYNC_QUEUE);
@@ -59,28 +65,50 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
         $data = [];
         $report = common_report_Report::createInfo('Package creation started');
         if ($this->getStorageService()->isValid()) {
-            foreach ($dataTypes as $requiredDataType) {
-                switch ($requiredDataType) {
-                    case self::PARAM_LTI_USER:
-                        $data[self::PARAM_LTI_USER] = $this->getLtiUser();
-                        break;
-                    case self::PARAM_DELIVERY_LOG:
-                        $data[self::PARAM_DELIVERY_LOG] = $this->getDeliveryLog();
-                        break;
-                    case self::PARAM_RESULTS:
-                        $data[self::PARAM_RESULTS] = $this->getResults();
-                        break;
-                    case self::PARAM_TEST_SESSION:
-                        $data[self::PARAM_TEST_SESSION] = $this->getTestSession();
-                        break;
-                    default:
-                        $report->add(common_report_Report::createFailure('Data type ' . $requiredDataType . ' not found'));
-                }
-            }
+
+            $queuedData = $this->getSyncQueueService()->getTasks($dataTypes, $this->getOption('limit'));
+            $this->getData($task);
+            /*foreach ($queuedData as $task) {
+                $data[] = $this->fillData($task);
+            }*/
+
             $this->getStorageService()->save($data);
         }
 
         return $report;
+    }
+
+    private function getData()
+    {
+        $this->getDataProviderService()
+            ->setServiceLocator($this->getServiceLocator())
+            ->getData($task);
+
+    }
+
+    /**
+     * Collect the data by the task
+     * @param $task
+     */
+    private function fillData($task)
+    {
+        switch ($task[SyncQueueInterface::]) {
+            case self::PARAM_LTI_USER:
+                $this->getLtiUserDataProvider
+                $data[self::PARAM_LTI_USER][] = $this->getLtiUser();
+                break;
+            case self::PARAM_DELIVERY_LOG:
+                $data[self::PARAM_DELIVERY_LOG][] = $this->getDeliveryLog();
+                break;
+            case self::PARAM_RESULTS:
+                $data[self::PARAM_RESULTS][] = $this->getResults();
+                break;
+            case self::PARAM_TEST_SESSION:
+                $data[self::PARAM_TEST_SESSION][] = $this->getTestSession();
+                break;
+            default:
+                $report->add(common_report_Report::createFailure('Data type ' . $requiredDataType . ' not found'));
+        }
     }
 
     /**
@@ -89,6 +117,9 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
      */
     private function getLtiUser()
     {
+        /** @var LtiUserService $ltiUserService */
+        $ltiUserService = $this->getServiceLocator()->get(LtiUserService::SERVICE_ID);
+
         return $data;
     }
 

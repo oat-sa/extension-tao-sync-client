@@ -43,16 +43,8 @@ interface SyncQueueInterface
     const PARAM_EVENT_TYPE_TEST_SESSION = 'test_session';
 
     const PARAM_SYNCHRONIZABLE_TYPE_LTI_USER = 'lti_user';
-    const TYPE_SYNCHRONIZABLE_TYPE_DELIVERY_LOG = 'delivery_log';
+    const PARAM_SYNCHRONIZABLE_TYPE_DELIVERY_LOG = 'delivery_log';
     const PARAM_SYNCHRONIZABLE_TYPE_DELIVERY_EXECUTION = 'delivery_execution';
-
-    /**
-     * Send not synchronized data to server
-     * @param string $serverId - unique server identifier
-     * @param int $limit - (0 - send all not synchronized data)
-     * @return bool
-     */
-    public function send($serverId, $limit = 0);
 
     /**
      * @param array $params
@@ -60,4 +52,13 @@ interface SyncQueueInterface
      * @throws SyncClientSyncQueueException
      */
     public function addTask($params = []);
+
+    /**
+     * List of tasks
+     * @param array $dataTypes - [self::PARAM_SYNCHRONIZABLE_TYPE_]
+     * @param int $limit
+     * @param bool $synchronized - which data we are looking for (by default that weren't synchronized)
+     * @return array
+     */
+    public function getTasks(array $dataTypes = [], $limit = 0, $synchronized = false);
 }

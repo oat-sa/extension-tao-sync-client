@@ -39,7 +39,7 @@ class DeliveryLogListener extends AbstractSyncQueueListener
     {
         self::getSyncQueueService()->addTask([
             SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID => $event->getId(),
-            SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_TYPE => SyncQueueService::TYPE_SYNCHRONIZABLE_TYPE_DELIVERY_LOG,
+            SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_TYPE => SyncQueueService::PARAM_SYNCHRONIZABLE_TYPE_DELIVERY_LOG,
             SyncQueueStorageInterface::PARAM_EVENT_TYPE => SyncQueueService::PARAM_EVENT_TYPE_DELIVERY_LOG,
             SyncQueueStorageInterface::PARAM_CREATED_AT => date('Y-m-d H:i:s'),
             SyncQueueStorageInterface::PARAM_UPDATED_AT => date('Y-m-d H:i:s'),

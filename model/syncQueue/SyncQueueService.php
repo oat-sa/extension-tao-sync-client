@@ -41,11 +41,6 @@ class SyncQueueService extends ConfigurableService implements SyncQueueInterface
      */
     private $storageService;
 
-    public function send($serverId, $limit = 0)
-    {
-        // TODO: Implement send() method.
-    }
-
     /**
      * @param array $params
      * @return mixed|void
@@ -102,5 +97,17 @@ class SyncQueueService extends ConfigurableService implements SyncQueueInterface
             }
         }
         return $this->storageService;
+    }
+
+    /**
+     * @param array $dataTypes
+     * @param int $limit
+     * @param bool $synchronized
+     * @return array
+     * @throws SyncClientSyncQueueException
+     */
+    public function getTasks(array $dataTypes = [], $limit = 0, $synchronized = false)
+    {
+        return $this->getStorageService()->getQueued($limit);
     }
 }

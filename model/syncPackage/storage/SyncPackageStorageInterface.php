@@ -16,21 +16,30 @@
  *
  * Copyright (c) 2019  (original work) Open Assessment Technologies SA;
  *
- * @author Oleksandr Zagovorychev <zagovorichev@gmail.com>
+ * @author Oleksandr Zagovorychev <zagovorichev@1pt.com>
  */
 
-namespace oat\taoSyncClient\model\syncPackage;
+namespace oat\taoSyncClient\model\syncPackage\storage;
 
 
-use oat\taoSyncClient\model\syncPackage\storage\SyncPackageStorageInterface;
-
-interface SyncPackageInterface
+interface SyncPackageStorageInterface
 {
-    const SERVICE_ID = 'taoSyncClient/SyncPackageService';
+    /**
+     * Create new package
+     * @return string package name
+     */
+    public function create();
 
     /**
-     * Getting path to the folder with Generated packages for synchronization
-     * @return SyncPackageStorageInterface
+     * get package content
+     * @param $packageName string
+     * @return string
      */
-    public function getStorageService();
+    public function get($packageName = '');
+
+    /**
+     * list of stored packages
+     * @return array
+     */
+    public function getList();
 }

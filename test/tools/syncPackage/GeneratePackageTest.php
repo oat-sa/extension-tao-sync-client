@@ -50,10 +50,7 @@ class GeneratePackageTest extends TestCase
         $output = $this->generatePackageTool->__invoke(['--help']);
 
         $this->assertInstanceOf(common_report_Report::class, $output);
-        $this->assertSame('Creating new file with prepared data which have to be sent to the server.
-',
-            $output->getMessage()
-        );
+        $this->assertSame('Creating new file with prepared data which have to be sent to the server.', $this->getReportMessage($output));
     }
 
     public function testLtiUserData()

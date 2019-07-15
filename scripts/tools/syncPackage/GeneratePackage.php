@@ -25,14 +25,11 @@ namespace oat\taoSyncClient\scripts\tools\syncPackage;
 use common_exception_Error;
 use common_report_Report;
 use oat\oatbox\extension\script\ScriptAction;
+use oat\taoSyncClient\model\syncPackage\SyncPackageService;
 
 class GeneratePackage extends ScriptAction
 {
-    const OPTION_LTI_USER = 'lti-user';
     const OPTION_ALL = 'all';
-    const OPTION_DELIVERY_LOG = 'delivery-log';
-    const OPTION_RESULTS = 'results';
-    const OPTION_TEST_SESSION = 'test-session';
 
     /**
      * @var common_report_Report
@@ -47,17 +44,41 @@ class GeneratePackage extends ScriptAction
     protected function provideOptions()
     {
         return [
-            'wet-run' => [
-                'prefix' => 'w',
-                'flag' => true,
-                'longPrefix' => 'wet-run',
-                'description' => 'Create new package with data.',
-            ],
             'verbose' => [
                 'prefix' => 'v',
                 'flag' => true,
                 'longPrefix' => 'verbose',
                 'description' => 'Force script to be more details',
+            ],
+            self::OPTION_ALL => [
+                'prefix' => 'a',
+                'flag' => true,
+                'longPrefix' => self::OPTION_ALL,
+                'description' => 'Sync ALL data that was not synchronized',
+            ],
+            SyncPackageService::PARAM_LTI_USER => [
+                'prefix' => 'l',
+                'flag' => true,
+                'longPrefix' => SyncPackageService::PARAM_LTI_USER,
+                'description' => 'Sync lti user data',
+            ],
+            SyncPackageService::PARAM_DELIVERY_LOG => [
+                'prefix' => 'd',
+                'flag' => true,
+                'longPrefix' => SyncPackageService::PARAM_DELIVERY_LOG,
+                'description' => 'Sync delivery log data',
+            ],
+            SyncPackageService::PARAM_RESULTS => [
+                'prefix' => 'r',
+                'flag' => true,
+                'longPrefix' => SyncPackageService::PARAM_RESULTS,
+                'description' => 'Sync results',
+            ],
+            SyncPackageService::PARAM_TEST_SESSION => [
+                'prefix' => 'r',
+                'flag' => true,
+                'longPrefix' => SyncPackageService::PARAM_TEST_SESSION,
+                'description' => 'Sync test sessions',
             ],
         ];
     }
@@ -78,37 +99,18 @@ class GeneratePackage extends ScriptAction
     protected function run()
     {
         $this->report = common_report_Report::createInfo('Script execution started');
-        $data = [];
-        if ($this->checkPath()) {
-            foreach ($this->getRequiredDataTypes() as $requiredDataType) {
-                switch ($requiredDataType) {
-                    case self::OPTION_LTI_USER:
-                        $data[self::OPTION_LTI_USER] = $this->getLtiUser();
-                        break;
-                    case self::OPTION_DELIVERY_LOG:
-                        $data[self::OPTION_DELIVERY_LOG] = $this->getDeliveryLog();
-                        break;
-                    case self::OPTION_RESULTS:
-                        $data[self::OPTION_RESULTS] = $this->getResults();
-                        break;
-                    case self::OPTION_TEST_SESSION:
-                        $data[self::OPTION_TEST_SESSION] = $this->getTestSession();
-                        break;
-                    default:
-                        $this->report->add(common_report_Report::createFailure('Data type ' . $requiredDataType . ' not found'));
-                }
-            }
-            $this->save($data);
-        }
-
+        $report = $this->getSyncPackageService()->create($this->getRequiredDataTypes());
+        $this->report->add($report);
         $this->report->add(common_report_Report::createSuccess('Done'));
         return $this->report;
     }
 
-    private function checkPath()
+    /**
+     * @return array|object|SyncPackageService
+     */
+    private function getSyncPackageService()
     {
-        $this->report->add(common_report_Report::createFailure('not implemented'));
-        return false;
+        return $this->getServiceLocator()->get(SyncPackageService::SERVICE_ID);
     }
 
     protected function showTime()
@@ -119,10 +121,10 @@ class GeneratePackage extends ScriptAction
     private function getRequiredDataTypes()
     {
         $dataTypes = [
-            self::OPTION_RESULTS,
-            self::OPTION_LTI_USER,
-            self::OPTION_TEST_SESSION,
-            self::OPTION_DELIVERY_LOG,
+            SyncPackageService::PARAM_RESULTS,
+            SyncPackageService::PARAM_LTI_USER,
+            SyncPackageService::PARAM_TEST_SESSION,
+            SyncPackageService::PARAM_DELIVERY_LOG,
         ];
 
         if(!$this->hasOption(self::OPTION_ALL)) {

@@ -22,31 +22,106 @@
 namespace oat\taoSyncClient\model\syncPackage;
 
 
-use oat\oatbox\filesystem\FileSystem;
+use common_exception_Error;
+use common_report_Report;
 use oat\oatbox\service\ConfigurableService;
 
 class SyncPackageService extends ConfigurableService implements SyncPackageInterface
 {
-    const OPTION_PATH = 'path';
+    const OPTION_STORAGE = 'storage';
+    const OPTION_SYNC_QUEUE = 'sync-queue';
 
-    public function getPath()
+    const PARAM_LTI_USER = 'lti-user';
+    const PARAM_DELIVERY_LOG = 'delivery-log';
+    const PARAM_RESULTS = 'results';
+    const PARAM_TEST_SESSION = 'test-session';
+
+    /**
+     * @return mixed|storage\SyncPackageStorageInterface
+     */
+    public function getStorageService()
     {
-        return $this->getOption(self::OPTION_PATH);
+        return $this->getOption(self::OPTION_STORAGE);
     }
 
-    public function setPath($path = '')
+    public function getSyncQueueService()
     {
-        $oldPath = $this->getPath();
-        $this->setOption(self::OPTION_PATH, $path);
-        if (!$this->checkPath()) {
-            // reset if new path can't be used
-            $this->setOption(self::OPTION_PATH, $oldPath);
+        return $this->getOption(self::OPTION_SYNC_QUEUE);
+    }
+
+    /**
+     * @param $dataTypes
+     * @return common_report_Report
+     * @throws common_exception_Error
+     */
+    public function create($dataTypes)
+    {
+        $data = [];
+        $report = common_report_Report::createInfo('Package creation started');
+        if ($this->getStorageService()->isValid()) {
+            foreach ($dataTypes as $requiredDataType) {
+                switch ($requiredDataType) {
+                    case self::PARAM_LTI_USER:
+                        $data[self::PARAM_LTI_USER] = $this->getLtiUser();
+                        break;
+                    case self::PARAM_DELIVERY_LOG:
+                        $data[self::PARAM_DELIVERY_LOG] = $this->getDeliveryLog();
+                        break;
+                    case self::PARAM_RESULTS:
+                        $data[self::PARAM_RESULTS] = $this->getResults();
+                        break;
+                    case self::PARAM_TEST_SESSION:
+                        $data[self::PARAM_TEST_SESSION] = $this->getTestSession();
+                        break;
+                    default:
+                        $report->add(common_report_Report::createFailure('Data type ' . $requiredDataType . ' not found'));
+                }
+            }
+            $this->getStorageService()->save($data);
         }
+
+        return $report;
     }
 
-    public function checkPath()
+    /**
+     * Lti User data
+     * @return array
+     */
+    private function getLtiUser()
     {
-        $path = $this->getPath();
-        FileSystem::class;
+        return $data;
     }
+
+    /*
+        public function getPath()
+        {
+            return $this->getOption(self::OPTION_STORAGE);
+        }
+
+        public function setPath($path = '')
+        {
+            $oldPath = $this->getPath();
+            $this->setOption(self::OPTION_STORAGE, $path);
+            if (!$this->checkPath()) {
+                // reset if new path can't be used
+                $this->setOption(self::OPTION_STORAGE, $oldPath);
+            }
+        }
+
+        public function checkPath()
+        {
+            $path = $this->getPath();
+            FileSystem::class;
+        }
+
+        public function getStorage()
+        {
+            public function getReportStorage()
+        {
+            return $this->getServiceManager()
+                ->get(FileSystemService::SERVICE_ID)
+                ->getDirectory('taoSyncClient')
+                ->getDirectory(self::OPTION_STORAGE);
+        }
+        }*/
 }

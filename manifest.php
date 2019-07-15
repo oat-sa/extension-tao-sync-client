@@ -19,6 +19,7 @@
  *
  */
 
+use oat\taoSyncClient\scripts\install\RegisterSyncPackageService;
 use oat\taoSyncClient\scripts\install\RegisterSyncQueueRds;
 use oat\taoSyncClient\scripts\update\Updater;
 
@@ -40,8 +41,9 @@ return array(
     ),
     'install' => array(
         'php' => [
-                RegisterSyncQueueRds::class,
-            ]
+            RegisterSyncQueueRds::class,
+            RegisterSyncPackageService::class,
+        ]
     ),
     'uninstall' => array(
     ),

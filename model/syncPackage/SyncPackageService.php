@@ -31,8 +31,9 @@ use oat\taoSyncClient\model\syncQueue\SyncQueueInterface;
 class SyncPackageService extends ConfigurableService implements SyncPackageInterface
 {
     const OPTION_STORAGE = 'storage';
-    const OPTION_SERVICE_PROVIDER = '';
-    const OPTION_SYNC_QUEUE = 'sync-queue';
+    const OPTION_DATA_PROVIDER = 'dataProvider';
+    const OPTION_MIGRATION = 'migration';
+    const OPTION_MIGRATION_PARAMS = 'migration_params';
 
     const PARAM_LTI_USER = 'lti-user';
     const PARAM_DELIVERY_LOG = 'delivery-log';
@@ -53,6 +54,16 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
     public function getSyncQueueService()
     {
         return $this->getOption(self::OPTION_SYNC_QUEUE);
+    }
+
+    public function getDataProviderService()
+    {
+        return $this->getOption(self::OPTION_DATA_PROVIDER);
+    }
+
+    public function getMigrationService()
+    {
+        return $this->getOption(self::OPTION_MIGRATION);
     }
 
     /**
@@ -123,36 +134,6 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
         return $data;
     }
 
-    /*
-        public function getPath()
-        {
-            return $this->getOption(self::OPTION_STORAGE);
-        }
 
-        public function setPath($path = '')
-        {
-            $oldPath = $this->getPath();
-            $this->setOption(self::OPTION_STORAGE, $path);
-            if (!$this->checkPath()) {
-                // reset if new path can't be used
-                $this->setOption(self::OPTION_STORAGE, $oldPath);
-            }
-        }
 
-        public function checkPath()
-        {
-            $path = $this->getPath();
-            FileSystem::class;
-        }
-
-        public function getStorage()
-        {
-            public function getReportStorage()
-        {
-            return $this->getServiceManager()
-                ->get(FileSystemService::SERVICE_ID)
-                ->getDirectory('taoSyncClient')
-                ->getDirectory(self::OPTION_STORAGE);
-        }
-        }*/
 }

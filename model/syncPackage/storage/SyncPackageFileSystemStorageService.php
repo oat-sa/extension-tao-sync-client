@@ -29,16 +29,22 @@ use oat\oatbox\service\ConfigurableService;
 
 class SyncPackageFileSystemStorageService extends ConfigurableService implements SyncPackageStorageInterface
 {
-    const STORAGE_NAME = 'packages';
+    const STORAGE_NAME = 'storage';
 
-    public function get($packageName = '')
+    /**
+     * @param string $packageName
+     * @return string Path to the File
+     */
+    public function getPackage($packageName = '')
     {
-        // TODO: Implement get() method.
+        return $packageName;
     }
 
-    public function create()
+    public function createPackage()
     {
         // TODO: Implement create() method.
+        $this->addMigration();
+        $path = $this->createFile();
     }
 
     /**
@@ -47,13 +53,13 @@ class SyncPackageFileSystemStorageService extends ConfigurableService implements
      */
     public function getList()
     {
-        $packages = [];
+        $packages = $this->getMigrations();
         /** @var ArrayIterator $iterator */
-        $iterator = $this->getStorageDir()->getFlyIterator(Directory::ITERATOR_FILE | Directory::ITERATOR_RECURSIVE);
+        /*$iterator = $this->getStorageDir()->getFlyIterator(Directory::ITERATOR_FILE | Directory::ITERATOR_RECURSIVE);
         while ($iterator->valid()) {
             $packages[] = $iterator->current();
             $iterator->next();
-        }
+        }*/
 
         return $packages;
     }

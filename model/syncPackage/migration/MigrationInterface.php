@@ -16,49 +16,54 @@
  *
  * Copyright (c) 2019  (original work) Open Assessment Technologies SA;
  *
- * @author Oleksandr Zagovorychev <zagovorichev@1pt.com>
+ * @author Oleksandr Zagovorychev <zagovorichev@gmail.com>
  */
 
-namespace oat\taoSyncClient\model\syncQueue\storage;
+namespace oat\taoSyncClient\model\syncPackage\migration;
 
 
-interface SyncQueueStorageInterface
+use Zend\ServiceManager\ServiceLocatorAwareInterface;
+
+interface MigrationInterface extends ServiceLocatorAwareInterface
 {
     const PARAM_ID = 'id';
-    const PARAM_SYNCHRONIZABLE_ID = 'synchronizable_id';
-    const PARAM_SYNCHRONIZABLE_TYPE = 'synchronizable_type';
-    const PARAM_EVENT_TYPE = 'event_type';
-    // id from the migrationService
-    const PARAM_SYNC_PACKAGE_ID = 'sync_package_id';
+    // unique package name
+    const PARAM_PACKAGE_NAME = 'package_name';
+    // synchronization session id
+    const PARAM_SYNC_ID = 'sync_id';
     const PARAM_CREATED_AT = 'created_at';
     const PARAM_UPDATED_AT = 'updated_at';
 
     /**
-     * Get only not synchronized data from the queue
-     * @param int $limit - (0 - all the data that wasn't synchronized)
+     * Getting first migration that was not synchronized
      * @return array
      */
-    public function getQueued($limit = 0);
+    public function getNextMigration();
 
     /**
-     * Get all the data synchronized and not
-     * @param int $limit
-     * @param int $offset
-     * @return mixed
+     * add new migration
+     * @param $name string
+     * @return bool
      */
-    public function getAll($limit = 1000, $offset = 0);
+    public function add($name);
 
     /**
-     * Adding new record to the queue
-     * @param array $action [all self::Params]
-     * @return mixed
-     */
-    public function insert(array $action);
-
-    /**
-     * Mark the record as synchronized
+     * mark migration as synchronized
      * @param $id
+     * @param $syncId
      * @return mixed
      */
-    public function setSyncId($id);
+    public function sync($id, $syncId);
+
+    /**
+     * Creating storage if needed
+     * @return void
+     */
+    public function createStorage();
+
+    /**
+     * Remove storage with data
+     * @return void
+     */
+    public function dropStorage();
 }

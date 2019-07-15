@@ -16,10 +16,10 @@
  *
  * Copyright (c) 2019  (original work) Open Assessment Technologies SA;
  *
- * @author Oleksandr Zagovorychev <zagovorichev@1pt.com>
+ * @author Oleksandr Zagovorychev <zagovorichev@gmail.com>
  */
 
-namespace oat\taoSyncClient\model\syncQueue\storage;
+namespace oat\taoSyncClient\model\syncPackage\migration;
 
 
 use common_Logger;
@@ -30,47 +30,43 @@ use Doctrine\DBAL\Types\Type;
 use oat\oatbox\service\ConfigurableService;
 use PDO;
 
-class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorageInterface
+class RdsMigrationService extends ConfigurableService implements MigrationInterface
 {
-    const TABLE_NAME = 'sync_client_queue';
+    const TABLE_NAME = 'sync_client_migrations';
     const OPTION_PERSISTENCE = 'persistence';
 
-    public function __construct($options = array())
-    {
-        // if initialized within other service we need to rewrite config
-        if (!array_key_exists(self::OPTION_PERSISTENCE, $options)
-            && array_key_exists(0, $options) && count($options) === 1) {
-            $options = [self::OPTION_PERSISTENCE => current($options)];
-        }
-        parent::__construct($options);
-    }
-
-    public function getQueued($limit = 0)
+    /**
+     * @return array
+     */
+    public function getNextMigration()
     {
         $sql = 'SELECT * FROM ' . self::TABLE_NAME . ' WHERE ' . self::PARAM_SYNC_ID . ' = ? ORDER BY ' . self::PARAM_ID . ' LIMIT ?';
-        $parameters = ['', $limit];
+        $parameters = ['', 1];
         $stmt = $this->getPersistence()->query($sql, $parameters);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getAll($limit = 1000, $offset = 0)
+    public function add($packageName)
     {
-        $sql = 'SELECT * FROM ' . self::TABLE_NAME . ' ORDER BY ' . self::PARAM_ID . ' LIMIT ? OFFSET ?';
-        $parameters = [0];
-        $stmt = $this->getPersistence()->query($sql, $parameters);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $result = $this->getPersistence()->insert(self::TABLE_NAME, [
+            static::PARAM_PACKAGE_NAME => $packageName,
+            static::PARAM_UPDATED_AT => date('Y-m-d H:i:s'),
+            static::PARAM_CREATED_AT => date('Y-m-d H:i:s'),
+        ]);
+        return $result === 1;
     }
 
-    public function insert(array $action)
+    public function sync($id, $syncId)
     {
-        return $this->getPersistence()->insert(self::TABLE_NAME, $action);
-    }
+        $qb = $this->getPersistence()->getPlatForm()->getQueryBuilder();
+        $qb
+            ->update(static::TABLE_NAME)
+            ->set(static::PARAM_SYNC_ID, $syncId)
+            ->set(static::PARAM_UPDATED_AT, date('Y-m-d H:i:s'))
+            ->where(static::PARAM_ID . '=:id')
+            ->setParameter('id', $id);
 
-    public function setSyncId($id)
-    {
-        $sql = 'UPDATE ' . self::TABLE_NAME . ' SET ' . self::PARAM_SYNC_ID . ' = ?, '.self::PARAM_UPDATED_AT.'= ? WHERE ' . self::PARAM_ID . '= ?';
-        $parameters = [1, date('Y-m-d H:i:s'), $id];
-        return $this->getPersistence()->exec($sql, $parameters);
+        return $this->getPersistence()->exec($qb->getSQL(), $qb->getParameters());
     }
 
     /**
@@ -83,9 +79,6 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
             ->getPersistenceById($this->getOption(self::OPTION_PERSISTENCE));
     }
 
-    /**
-     * @return bool
-     */
     public function createStorage()
     {
         $persistence = $this->getPersistence();
@@ -99,17 +92,13 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
             $table->addOption('collate', 'utf8_unicode_ci');
             $table->addOption('engine', 'InnoDB');
             $table->addColumn(self::PARAM_ID, 'integer', ['notnull' => true, 'autoincrement' => true]);
-            $table->addColumn(self::PARAM_SYNCHRONIZABLE_ID, 'string', ['notnull' => true, 'length' => 255]);
-            $table->addColumn(self::PARAM_SYNCHRONIZABLE_TYPE, 'string', ['notnull' => true, 'length' => 255]);
-            $table->addColumn(self::PARAM_EVENT_TYPE, 'string', ['notnull' => true, 'length' => 255]);
-            $table->addColumn(self::PARAM_SYNC_PACKAGE_ID, 'string', ['notnull' => true, 'length' => 255, 'default' => '']);
+            $table->addColumn(self::PARAM_PACKAGE_NAME, 'string', ['notnull' => true, 'length' => 255, 'default' => '']);
+            $table->addColumn(self::PARAM_SYNC_ID, 'string', ['notnull' => true, 'length' => 255, 'default' => '']);
             $table->addColumn(self::PARAM_CREATED_AT, Type::DATETIME, ['notnull' => true]);
             $table->addColumn(self::PARAM_UPDATED_AT, Type::DATETIME, ['notnull' => true]);
 
             $table->setPrimaryKey(array(self::PARAM_ID));
-            $table->addIndex([self::PARAM_SYNCHRONIZABLE_ID, self::PARAM_SYNCHRONIZABLE_TYPE], 'IDX_' . self::TABLE_NAME . '_sync_id_type');
-            $table->addIndex([self::PARAM_EVENT_TYPE], 'IDX_' . self::TABLE_NAME . '_event_type');
-            $table->addIndex([self::PARAM_SYNC_PACKAGE_ID], 'IDX_' . self::TABLE_NAME . '_sync_id');
+            $table->addIndex([self::PARAM_SYNC_ID], 'IDX_' . self::TABLE_NAME . '_sync_id');
             $table->addIndex([self::PARAM_CREATED_AT], 'IDX_' . self::TABLE_NAME . '_created_at');
             $table->addIndex([self::PARAM_UPDATED_AT], 'IDX_' . self::TABLE_NAME . '_updated_at');
         } catch (SchemaException $e) {

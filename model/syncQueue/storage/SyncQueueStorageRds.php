@@ -114,7 +114,7 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
             $table->setPrimaryKey(array(self::PARAM_ID));
             $table->addIndex([self::PARAM_SYNCHRONIZABLE_ID, self::PARAM_SYNCHRONIZABLE_TYPE], 'IDX_' . self::TABLE_NAME . '_sync_id_type');
             $table->addIndex([self::PARAM_EVENT_TYPE], 'IDX_' . self::TABLE_NAME . '_event_type');
-            $table->addIndex([self::PARAM_SYNC_MIGRATION_ID], 'IDX_' . self::TABLE_NAME . '_sync_id');
+            $table->addIndex([self::PARAM_SYNC_MIGRATION_ID], 'IDX_' . self::TABLE_NAME . '_sync_migration_id');
             $table->addIndex([self::PARAM_CREATED_AT], 'IDX_' . self::TABLE_NAME . '_created_at');
             $table->addIndex([self::PARAM_UPDATED_AT], 'IDX_' . self::TABLE_NAME . '_updated_at');
         } catch (SchemaException $e) {

@@ -23,14 +23,21 @@ namespace oat\taoSyncClient\scripts\install;
 
 use common_report_Report;
 use oat\oatbox\extension\InstallAction;
+use oat\oatbox\filesystem\FileSystemService;
 use oat\oatbox\service\ServiceNotFoundException;
 use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderInterface;
 use oat\taoSyncClient\model\syncPackage\migration\MigrationInterface;
 use oat\taoSyncClient\model\syncPackage\migration\RdsMigrationService;
 use oat\taoSyncClient\model\syncPackage\storage\SyncPackageFileSystemStorageService;
+use oat\taoSyncClient\model\syncPackage\SyncPackageInterface;
 use oat\taoSyncClient\model\syncPackage\SyncPackageService;
-use oat\taoSyncClient\model\syncQueue\SyncQueueService;
 
+/**
+ * php index.php 'oat\taoSyncClient\scripts\install\RegisterSyncPackageService'
+ *
+ * Class RegisterSyncPackageService
+ * @package oat\taoSyncClient\scripts\install
+ */
 class RegisterSyncPackageService extends InstallAction
 {
     /**
@@ -49,15 +56,30 @@ class RegisterSyncPackageService extends InstallAction
                 SyncPackageService::OPTION_DATA_PROVIDER => SyncClientDataProviderInterface::class,
                 SyncPackageService::OPTION_STORAGE => SyncPackageFileSystemStorageService::class,
             ]);
+            $syncPackageService->setServiceLocator($this->getServiceLocator());
         }
 
-        $syncPackageClass = $syncPackageService->getOption(SyncPackageService::OPTION_MIGRATION);
+        $syncPackageMigrationClass = $syncPackageService->getOption(SyncPackageService::OPTION_MIGRATION);
         $syncPackageMigrationParams = $syncPackageService->getOption(SyncPackageService::OPTION_MIGRATION_PARAMS);
         /** @var MigrationInterface $storage */
-        $storage = new $syncPackageClass([RdsMigrationService::OPTION_PERSISTENCE => current($syncPackageMigrationParams)]);
-        $storage->setServiceLocator($this->getServiceManager());
-        $storage->createStorage();
-        $this->getServiceManager()->register(SyncQueueService::SERVICE_ID, $syncPackageService);
+        $migration = new $syncPackageMigrationClass([RdsMigrationService::OPTION_PERSISTENCE => current($syncPackageMigrationParams)]);
+        $migration->setServiceLocator($this->getServiceManager());
+        $migration->createStorage();
+
+        // storage for packages
+        $storagePackageClass = $syncPackageService->getOption(SyncPackageService::OPTION_STORAGE);
+        $storagePackageService = new $storagePackageClass;
+
+        if ($storagePackageService->getStorageName()) {
+            $serviceManager = $this->getServiceManager();
+            $service = $serviceManager->get(FileSystemService::SERVICE_ID);
+            $service->createFileSystem($storagePackageService->getStorageName());
+            $serviceManager->register(FileSystemService::SERVICE_ID, $service);
+        }
+        $storagePackageService->setServiceLocator($this->getServiceLocator());
+        $storagePackageService->createStorage();
+
+        $this->getServiceManager()->register(SyncPackageInterface::SERVICE_ID, $syncPackageService);
         return new common_report_Report(common_report_Report::TYPE_SUCCESS, __('SyncClient queue storage successfully created'));
     }
 }

@@ -22,25 +22,30 @@
 namespace oat\taoSyncClient\model\syncPackage\storage;
 
 
-use ArrayIterator;
 use oat\oatbox\filesystem\Directory;
 use oat\oatbox\filesystem\FileSystemService;
 use oat\oatbox\service\ConfigurableService;
 
 class SyncPackageFileSystemStorageService extends ConfigurableService implements SyncPackageStorageInterface
 {
-    const STORAGE_NAME = 'storage';
+    const FILESYSTEM_ID = 'taoSyncClient';
+    const STORAGE_NAME = 'packages';
+
+    public function isValid()
+    {
+        return $this->getStorageDir()->exists();
+    }
 
     /**
      * @param string $packageName
      * @return string Path to the File
      */
-    public function getPackage($packageName = '')
+    public function getPackagePath($packageName = '')
     {
         return $packageName;
     }
 
-    public function createPackage()
+    public function createPackage($name = '', $data = [])
     {
         // TODO: Implement create() method.
         $this->addMigration();
@@ -48,26 +53,9 @@ class SyncPackageFileSystemStorageService extends ConfigurableService implements
     }
 
     /**
-     * List of the available packages
-     * @return array
-     */
-    public function getList()
-    {
-        $packages = $this->getMigrations();
-        /** @var ArrayIterator $iterator */
-        /*$iterator = $this->getStorageDir()->getFlyIterator(Directory::ITERATOR_FILE | Directory::ITERATOR_RECURSIVE);
-        while ($iterator->valid()) {
-            $packages[] = $iterator->current();
-            $iterator->next();
-        }*/
-
-        return $packages;
-    }
-
-    /**
      * @return FileSystemService
      */
-    public function getFileSystemService()
+    private function getFileSystemService()
     {
         return $this->getServiceLocator()
             ->get(FileSystemService::SERVICE_ID);
@@ -76,11 +64,23 @@ class SyncPackageFileSystemStorageService extends ConfigurableService implements
     /**
      * @return Directory
      */
-    public function getStorageDir()
+    private function getStorageDir()
     {
         return $this->getFileSystemService()
-            ->getDirectory('taoSyncClient')
+            ->getDirectory(self::FILESYSTEM_ID)
             ->getDirectory(self::STORAGE_NAME);
 
+    }
+
+    public function createStorage()
+    {
+        $this->getFileSystemService()
+            ->createFileSystem(self::FILESYSTEM_ID)
+            ->createDir(self::STORAGE_NAME);
+    }
+
+    public function getStorageName()
+    {
+        return static::FILESYSTEM_ID;
     }
 }

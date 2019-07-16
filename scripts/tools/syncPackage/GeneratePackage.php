@@ -27,6 +27,12 @@ use common_report_Report;
 use oat\oatbox\extension\script\ScriptAction;
 use oat\taoSyncClient\model\syncPackage\SyncPackageService;
 
+/**
+ * php index.php 'oat\taoSyncClient\scripts\tools\syncPackage\GeneratePackage'
+ *
+ * Class GeneratePackage
+ * @package oat\taoSyncClient\scripts\tools\syncPackage
+ */
 class GeneratePackage extends ScriptAction
 {
     const OPTION_ALL = 'all';
@@ -130,7 +136,7 @@ class GeneratePackage extends ScriptAction
         if(!$this->hasOption(self::OPTION_ALL)) {
             foreach ($dataTypes as $key => $dataType) {
                 if (!$this->hasOption($dataType)) {
-                    unset($dataType[$key]);
+                    unset($dataTypes[$key]);
                 }
             }
         }

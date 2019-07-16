@@ -45,9 +45,9 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
         parent::__construct($options);
     }
 
-    public function getQueued($limit = 0)
+    public function getQueued($types = [], $limit = 0)
     {
-        $sql = 'SELECT * FROM ' . self::TABLE_NAME . ' WHERE ' . self::PARAM_SYNC_ID . ' = ? ORDER BY ' . self::PARAM_ID . ' LIMIT ?';
+        $sql = 'SELECT * FROM ' . self::TABLE_NAME . ' WHERE ' . self::PARAM_SYNC_MIGRATION_ID . ' = ? ORDER BY ' . self::PARAM_ID . ' LIMIT ?';
         $parameters = ['', $limit];
         $stmt = $this->getPersistence()->query($sql, $parameters);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -66,7 +66,7 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
         return $this->getPersistence()->insert(self::TABLE_NAME, $action);
     }
 
-    public function setSyncId($id)
+    public function setMigrationId($id)
     {
         $sql = 'UPDATE ' . self::TABLE_NAME . ' SET ' . self::PARAM_SYNC_ID . ' = ?, '.self::PARAM_UPDATED_AT.'= ? WHERE ' . self::PARAM_ID . '= ?';
         $parameters = [1, date('Y-m-d H:i:s'), $id];
@@ -102,14 +102,14 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
             $table->addColumn(self::PARAM_SYNCHRONIZABLE_ID, 'string', ['notnull' => true, 'length' => 255]);
             $table->addColumn(self::PARAM_SYNCHRONIZABLE_TYPE, 'string', ['notnull' => true, 'length' => 255]);
             $table->addColumn(self::PARAM_EVENT_TYPE, 'string', ['notnull' => true, 'length' => 255]);
-            $table->addColumn(self::PARAM_SYNC_PACKAGE_ID, 'string', ['notnull' => true, 'length' => 255, 'default' => '']);
+            $table->addColumn(self::PARAM_SYNC_MIGRATION_ID, 'string', ['notnull' => true, 'length' => 255, 'default' => '']);
             $table->addColumn(self::PARAM_CREATED_AT, Type::DATETIME, ['notnull' => true]);
             $table->addColumn(self::PARAM_UPDATED_AT, Type::DATETIME, ['notnull' => true]);
 
             $table->setPrimaryKey(array(self::PARAM_ID));
             $table->addIndex([self::PARAM_SYNCHRONIZABLE_ID, self::PARAM_SYNCHRONIZABLE_TYPE], 'IDX_' . self::TABLE_NAME . '_sync_id_type');
             $table->addIndex([self::PARAM_EVENT_TYPE], 'IDX_' . self::TABLE_NAME . '_event_type');
-            $table->addIndex([self::PARAM_SYNC_PACKAGE_ID], 'IDX_' . self::TABLE_NAME . '_sync_id');
+            $table->addIndex([self::PARAM_SYNC_MIGRATION_ID], 'IDX_' . self::TABLE_NAME . '_sync_id');
             $table->addIndex([self::PARAM_CREATED_AT], 'IDX_' . self::TABLE_NAME . '_created_at');
             $table->addIndex([self::PARAM_UPDATED_AT], 'IDX_' . self::TABLE_NAME . '_updated_at');
         } catch (SchemaException $e) {

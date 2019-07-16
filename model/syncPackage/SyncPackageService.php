@@ -26,6 +26,8 @@ use common_exception_Error;
 use common_report_Report;
 use oat\oatbox\service\ConfigurableService;
 use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderInterface;
+use oat\taoSyncClient\model\syncPackage\migration\MigrationInterface;
+use oat\taoSyncClient\model\syncPackage\storage\SyncPackageStorageInterface;
 use oat\taoSyncClient\model\syncQueue\storage\SyncQueueStorageInterface;
 use oat\taoSyncClient\model\syncQueue\SyncQueueInterface;
 use oat\taoSyncClient\model\syncQueue\SyncQueueService;
@@ -43,11 +45,31 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
     const PARAM_TEST_SESSION = 'test-session';
 
     /**
+     * @var SyncPackageStorageInterface
+     */
+    private $storageService;
+
+    /**
+     * @var SyncClientDataProviderInterface
+     */
+    private $dataProviderService;
+
+    /**
+     * @var MigrationInterface
+     */
+    private $migrationService;
+
+    /**
      * @return mixed|storage\SyncPackageStorageInterface
      */
     public function getStorageService()
     {
-        return $this->getOption(self::OPTION_STORAGE);
+        if (!$this->storageService) {
+            $storageClass = $this->getOption(self::OPTION_STORAGE);
+            $this->storageService = new $storageClass;
+            $this->storageService->setServiceLocator($this->getServiceLocator());
+        }
+        return $this->storageService;
     }
 
     /**
@@ -63,12 +85,26 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
      */
     public function getDataProviderService()
     {
-        return $this->getOption(self::OPTION_DATA_PROVIDER);
+        if (!$this->dataProviderService) {
+            $dataProviderClass = $this->getOption(self::OPTION_DATA_PROVIDER);
+            $this->dataProviderService = new $dataProviderClass;
+            $this->dataProviderService->setServiceLocator($this->getServiceLocator());
+
+        }
+        return $this->dataProviderService;
     }
 
+    /**
+     * @return MigrationInterface
+     */
     public function getMigrationService()
     {
-        return $this->getOption(self::OPTION_MIGRATION);
+        if (!$this->migrationService) {
+            $migrationClass = $this->getOption(self::OPTION_MIGRATION);
+            $this->migrationService = new $migrationClass;
+            $this->migrationService->setServiceLocator($this->getServiceLocator());
+        }
+        return $this->migrationService;
     }
 
     /**
@@ -87,7 +123,7 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
                 $data[] = $this->getData($task);
                 $reportCounts = $this->increaseTypeCount($reportCounts, $task[SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_TYPE]);
             }
-            $migrationId = $this->getStorageService()->save($data);
+            $migrationId = $this->getStorageService()->createPackage($data);
             $migratedCount = $this->getSyncQueueService()->markAsMigrated($migrationId, $queuedTasks);
 
             $report->add(common_report_Report::createInfo($this->getReportMessage($migrationId, $migratedCount, $reportCounts)));

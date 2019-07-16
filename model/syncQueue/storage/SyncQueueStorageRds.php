@@ -47,8 +47,13 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
 
     public function getQueued($types = [], $limit = 0)
     {
-        $sql = 'SELECT * FROM ' . self::TABLE_NAME . ' WHERE ' . self::PARAM_SYNC_MIGRATION_ID . ' = ? ORDER BY ' . self::PARAM_ID . ' LIMIT ?';
-        $parameters = ['', $limit];
+        $sql = 'SELECT * FROM ' . self::TABLE_NAME . ' WHERE ' . self::PARAM_SYNC_MIGRATION_ID . ' = ? ORDER BY ' . self::PARAM_ID;
+        $parameters = [''];
+
+        if ($limit > 0) {
+            $sql .=  ' LIMIT ?';
+            $parameters[] = $limit;
+        }
         $stmt = $this->getPersistence()->query($sql, $parameters);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -102,7 +107,7 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
             $table->addColumn(self::PARAM_SYNCHRONIZABLE_ID, 'string', ['notnull' => true, 'length' => 255]);
             $table->addColumn(self::PARAM_SYNCHRONIZABLE_TYPE, 'string', ['notnull' => true, 'length' => 255]);
             $table->addColumn(self::PARAM_EVENT_TYPE, 'string', ['notnull' => true, 'length' => 255]);
-            $table->addColumn(self::PARAM_SYNC_MIGRATION_ID, 'string', ['notnull' => true, 'length' => 255, 'default' => '']);
+            $table->addColumn(self::PARAM_SYNC_MIGRATION_ID, 'integer', ['notnull' => true, 'default' => 0]);
             $table->addColumn(self::PARAM_CREATED_AT, Type::DATETIME, ['notnull' => true]);
             $table->addColumn(self::PARAM_UPDATED_AT, Type::DATETIME, ['notnull' => true]);
 

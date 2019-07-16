@@ -61,4 +61,11 @@ interface SyncQueueInterface
      * @return array
      */
     public function getTasks(array $dataTypes = [], $limit = 0, $synchronized = false);
+
+    /**
+     * @param int $migrationId
+     * @param array $queuedTasks
+     * @return int (count of the updated fields)
+     */
+    public function markAsMigrated($migrationId = 0, $queuedTasks = []);
 }

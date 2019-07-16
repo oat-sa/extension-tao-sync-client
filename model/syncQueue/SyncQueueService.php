@@ -110,4 +110,11 @@ class SyncQueueService extends ConfigurableService implements SyncQueueInterface
     {
         return $this->getStorageService()->getQueued($limit);
     }
+
+    public function markAsMigrated($migrationId = 0, $queuedTasks = [])
+    {
+        $updatedCount = 0;
+        // @todo
+        return $updatedCount;
+    }
 }

@@ -22,5 +22,5 @@ namespace oat\taoSyncClient\model\dataProvider;
 
 interface SyncClientCustomDataProviderInterface
 {
-    public function getData($data = []);
+    public function getData($synchronizableIds = []);
 }

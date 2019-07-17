@@ -22,24 +22,18 @@ namespace oat\taoSyncClient\model\dataProvider\providers;
 use oat\oatbox\service\ConfigurableService;
 use oat\taoProctoring\model\deliveryLog\DeliveryLog;
 use oat\taoSyncClient\model\dataProvider\SyncClientCustomDataProviderInterface;
-use oat\taoSyncClient\model\syncQueue\storage\SyncQueueStorageInterface;
 
 class DeliveryLogDataProviderService extends ConfigurableService implements SyncClientCustomDataProviderInterface
 {
     /**
-     * @param array $data
+     * @param array $synchronizableIds
      * @return array
      */
-    public function getData($data = [])
+    public function getData($synchronizableIds = [])
     {
-        foreach ($data as $task) {
-            $deliveryLogIds = $task[SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID];
-        }
-        return isset($deliveryLogIds)
-            ? $this->getDeliveryLog()->search(
-                [DeliveryLog::DELIVERY_EXECUTION_ID => $deliveryLogIds],
-                ['shouldDecodeData' => false])
-            : [];
+        return $this->getDeliveryLog()->search(
+                [DeliveryLog::DELIVERY_EXECUTION_ID => $synchronizableIds],
+                ['shouldDecodeData' => false]);
     }
 
     /**

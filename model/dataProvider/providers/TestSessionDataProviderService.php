@@ -25,7 +25,7 @@ use oat\taoSyncClient\model\dataProvider\SyncClientCustomDataProviderInterface;
 class TestSessionDataProviderService extends ConfigurableService implements SyncClientCustomDataProviderInterface
 {
 
-    public function getData($data = [])
+    public function getData($synchronizableIds = [])
     {
         //something terrible goes here
         return [];

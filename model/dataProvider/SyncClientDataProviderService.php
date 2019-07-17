@@ -22,12 +22,23 @@ namespace oat\taoSyncClient\model\dataProvider;
 
 use oat\oatbox\service\ConfigurableService;
 use oat\taoSyncClient\model\exception\SyncClientException;
+use oat\taoSyncClient\model\syncQueue\storage\SyncQueueStorageInterface;
 
 class SyncClientDataProviderService extends ConfigurableService implements SyncClientDataProviderInterface
 {
     const OPTION_PROVIDERS = 'providers';
 
+
+    /**
+     * array of available providers from config.
+     * @var array
+     */
     private $availableProviders;
+    /**
+     * array of created providers
+     * @var SyncClientCustomDataProviderInterface[]
+     */
+    private $providers;
 
 
     /**
@@ -39,10 +50,9 @@ class SyncClientDataProviderService extends ConfigurableService implements SyncC
     {
         $groupedTasks = [];
         $data = [];
-        foreach ($tasks as $task){
-            $groupedTasks[$task['event_type']][] = $task;
+        foreach ($tasks as $task) {
+            $groupedTasks[$task['event_type']][] = $task[SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID];
         }
-        $this->availableProviders = $this->getOption(self::OPTION_PROVIDERS);
         foreach ($groupedTasks as $type => $items) {
             $data[$type] = $this->getProvider($type)->getData($items);
         }
@@ -56,13 +66,18 @@ class SyncClientDataProviderService extends ConfigurableService implements SyncC
      */
     private function getProvider($type)
     {
-        if (empty($this->availableProviders[$type])
-            || $this->availableProviders[$type] instanceof SyncClientCustomDataProviderInterface) {
-            throw new SyncClientException('Incorrect data provider');
+        if (empty($this->availableProviders)) {
+            $this->availableProviders = $this->getOption(self::OPTION_PROVIDERS);
         }
-        $customDataProvider = new $this->availableProviders[$type];
-        $customDataProvider->setServiceLocator($this->getServiceLocator());
-        return $customDataProvider;
+        if (!array_key_exists($type, $this->providers)) {
+            if (!array_key_exists($type, $this->availableProviders)
+                || !$this->availableProviders[$type] instanceof SyncClientCustomDataProviderInterface) {
+                throw new SyncClientException('Incorrect data provider');
+            }
+            $this->providers[$type] = new $this->availableProviders[$type];
+            $this->providers[$type]->setServiceLocator($this->getServiceLocator());
+        }
+        return $this->providers[$type];
     }
 
 }

@@ -25,29 +25,34 @@ use oat\taoDelivery\model\execution\ServiceProxy;
 use oat\taoDeliveryRdf\helper\DetectTestAndItemIdentifiersHelper;
 use oat\taoResultServer\models\classes\ResultServerService;
 use oat\taoSyncClient\model\dataProvider\SyncClientCustomDataProviderInterface;
-use oat\taoSyncClient\model\syncQueue\storage\SyncQueueStorageInterface;
 
+/**
+ * TODO: rewrite receiving data from ResultService. In old code it is using SyncEncryptedResultService
+ *
+ * Class ResultDataProviderService
+ * @package oat\taoSyncClient\model\dataProvider\providers
+ */
 class ResultDataProviderService extends ConfigurableService implements SyncClientCustomDataProviderInterface
 {
 
     private $serviceProxy;
 
     /**
-     * @param array $data
+     * @param array $synchronizableIds
      * @return array
      * @throws \common_exception_NotFound
      * @throws \core_kernel_persistence_Exception
      */
-    public function getData($data = [])
+    public function getData($synchronizableIds = [])
     {
-        foreach ($data as $deliveryExecutionData) {
+        foreach ($synchronizableIds as $deliveryExecutionId) {
             /** @var DeliveryExecution $deliveryExecution */
-            $deliveryExecution = $this->getServiceProxy()->getDeliveryExecution($deliveryExecutionData[SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID]);
-            $variables = $this->getDeliveryExecutionVariables($deliveryExecution->getDelivery()->getUri(), $deliveryExecutionData[SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID]);
-            $results[$deliveryExecutionData] = [
+            $deliveryExecution = $this->getServiceProxy()->getDeliveryExecution($deliveryExecutionId);
+            $variables = $this->getDeliveryExecutionVariables($deliveryExecution->getDelivery()->getUri(), $deliveryExecutionId);
+            $results[] = [
                 'deliveryId'          => $deliveryExecution->getDelivery()->getUri(),
-                'deliveryExecutionId' => $deliveryExecutionData[$deliveryExecutionData[SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID]],
-                'details'             => $this->getDeliveryExecutionDetails($deliveryExecutionData[$deliveryExecutionData[SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID]]),
+                'deliveryExecutionId' => $deliveryExecutionId,
+                'details'             => $this->getDeliveryExecutionDetails($deliveryExecutionId),
                 'variables'           => $variables,
             ];
         }

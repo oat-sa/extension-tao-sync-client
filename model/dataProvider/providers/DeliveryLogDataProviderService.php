@@ -22,6 +22,7 @@ namespace oat\taoSyncClient\model\dataProvider\providers;
 use oat\oatbox\service\ConfigurableService;
 use oat\taoProctoring\model\deliveryLog\DeliveryLog;
 use oat\taoSyncClient\model\dataProvider\SyncClientCustomDataProviderInterface;
+use oat\taoSyncClient\model\syncQueue\storage\SyncQueueStorageInterface;
 
 class DeliveryLogDataProviderService extends ConfigurableService implements SyncClientCustomDataProviderInterface
 {
@@ -31,9 +32,15 @@ class DeliveryLogDataProviderService extends ConfigurableService implements Sync
      */
     public function getData($data = [])
     {
-        return $this->getLogs($data);
+        foreach ($data as $task) {
+            $deliveryLogIds = $task[SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID];
+        }
+        return isset($deliveryLogIds)
+            ? $this->getDeliveryLog()->search(
+                [DeliveryLog::DELIVERY_EXECUTION_ID => $deliveryLogIds],
+                ['shouldDecodeData' => false])
+            : [];
     }
-
 
     /**
      * @return array|DeliveryLog
@@ -41,17 +48,5 @@ class DeliveryLogDataProviderService extends ConfigurableService implements Sync
     protected function getDeliveryLog()
     {
         return $this->getServiceLocator()->get(DeliveryLog::SERVICE_ID);
-    }
-
-    /**
-     * @param array $deliveryLogIds
-     * @param bool $shouldDecode
-     * @return mixed
-     */
-    protected function getLogs($deliveryLogIds = [], $shouldDecode = true)
-    {
-        return $this->getDeliveryLog()->search(
-            ['id' => $deliveryLogIds], //id?
-            ['shouldDecodeData' => $shouldDecode]);
     }
 }

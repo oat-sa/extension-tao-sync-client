@@ -23,27 +23,41 @@ use oat\oatbox\service\ConfigurableService;
 use oat\taoEncryption\Service\Lti\LaunchData\EncryptedLtiLaunchDataStorage;
 use oat\taoLti\models\classes\user\LtiUserService;
 use oat\taoSyncClient\model\dataProvider\SyncClientCustomDataProviderInterface;
+use oat\taoSyncClient\model\syncQueue\storage\SyncQueueStorageInterface;
 
 class LtiUserDataProviderService extends ConfigurableService implements SyncClientCustomDataProviderInterface
 {
+
     /**
      * @param array $data
      * @return array
+     * @throws \common_exception_Error
+     * @throws \common_exception_InvalidArgumentType
      */
     public function getData($data = [])
     {
         /** @var EncryptedLtiLaunchDataStorage $encryptedLtiStorage */
         $encryptedLtiStorage = $this->getServiceLocator()->get(EncryptedLtiLaunchDataStorage::SERVICE_ID);
-        /** @var LtiUserService $ltiUserService */
-        $ltiUserService = $this->getServiceLocator()->get(LtiUserService::SERVICE_ID);
+        foreach ($data as $task) {
+            try{
+                $userResource = new \core_kernel_classes_Resource($task[SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID]);
+                $properties = $userResource->getPropertiesValues([
+                    LtiUserService::PROPERTY_USER_LTIKEY,
+                    LtiUserService::PROPERTY_USER_LTICONSUMER
+                ]);
+                $users[] = [
+                    EncryptedLtiLaunchDataStorage::COLUMN_USER_ID    => $properties[LtiUserService::PROPERTY_USER_LTIKEY][0],
+                    EncryptedLtiLaunchDataStorage::COLUMN_CONSUMER   => $properties[LtiUserService::PROPERTY_USER_LTICONSUMER][0],
+                    EncryptedLtiLaunchDataStorage::COLUMN_SERIALIZED => $encryptedLtiStorage->getEncrypted($properties[LtiUserService::PROPERTY_USER_LTIKEY][0]),
+                    'client_user_id'                                 => $task[SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID],
+                ];
+            }catch (\Exception $e){
+                // no log system described for this.
+                continue;
+            }
 
-
-        //TODO: implement getLtiUsersBatch() in taoLti and fix update event triggering
-        $users = $encryptedLtiStorage->getLtiUsersBatch($data);
-        foreach ($users as $user) {
-            $user['client_user_id'] = $ltiUserService->getUserIdentifier($user['user_id'], $user['consumer']);
         }
-        return $users;
+        return $users ?? [];
     }
 
 }

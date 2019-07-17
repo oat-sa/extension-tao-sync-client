@@ -37,13 +37,16 @@ class SyncClientDataProviderService extends ConfigurableService implements SyncC
      */
     public function getData($tasks)
     {
-        //needs grouping by type[LtiUser|DeliveryLog...]. can be later optimized for bulk selects
-
-        $this->availableProviders = $this->getOption(self::OPTION_PROVIDERS);
-        foreach ($tasks as $type => $groupedTasks) {
-            $data[] = $this->getProvider($type)->getData($groupedTasks);
+        $groupedTasks = [];
+        $data = [];
+        foreach ($tasks as $task){
+            $groupedTasks[$task['event_type']][] = $task;
         }
-        return $data ?? [];
+        $this->availableProviders = $this->getOption(self::OPTION_PROVIDERS);
+        foreach ($groupedTasks as $type => $items) {
+            $data[$type] = $this->getProvider($type)->getData($items);
+        }
+        return $data;
     }
 
     /**

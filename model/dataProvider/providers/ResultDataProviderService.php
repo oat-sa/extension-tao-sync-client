@@ -25,26 +25,33 @@ use oat\taoDelivery\model\execution\ServiceProxy;
 use oat\taoDeliveryRdf\helper\DetectTestAndItemIdentifiersHelper;
 use oat\taoResultServer\models\classes\ResultServerService;
 use oat\taoSyncClient\model\dataProvider\SyncClientCustomDataProviderInterface;
+use oat\taoSyncClient\model\syncQueue\storage\SyncQueueStorageInterface;
 
 class ResultDataProviderService extends ConfigurableService implements SyncClientCustomDataProviderInterface
 {
 
     private $serviceProxy;
 
+    /**
+     * @param array $data
+     * @return array
+     * @throws \common_exception_NotFound
+     * @throws \core_kernel_persistence_Exception
+     */
     public function getData($data = [])
     {
-        foreach ($data as $deliveryExecutionId) {
+        foreach ($data as $deliveryExecutionData) {
             /** @var DeliveryExecution $deliveryExecution */
-            $deliveryExecution = $this->getServiceProxy()->getDeliveryExecution($deliveryExecutionId);
-            $variables = $this->getDeliveryExecutionVariables($deliveryExecution->getDelivery()->getUri(), $deliveryExecutionId);
-            $results[$deliveryExecutionId] = [
+            $deliveryExecution = $this->getServiceProxy()->getDeliveryExecution($deliveryExecutionData[SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID]);
+            $variables = $this->getDeliveryExecutionVariables($deliveryExecution->getDelivery()->getUri(), $deliveryExecutionData[SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID]);
+            $results[$deliveryExecutionData] = [
                 'deliveryId'          => $deliveryExecution->getDelivery()->getUri(),
-                'deliveryExecutionId' => $deliveryExecutionId,
-                'details'             => $this->getDeliveryExecutionDetails($deliveryExecutionId),
+                'deliveryExecutionId' => $deliveryExecutionData[$deliveryExecutionData[SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID]],
+                'details'             => $this->getDeliveryExecutionDetails($deliveryExecutionData[$deliveryExecutionData[SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID]]),
                 'variables'           => $variables,
             ];
         }
-        return [];
+        return $results ?? [];
     }
 
     /**
@@ -99,11 +106,18 @@ class ResultDataProviderService extends ConfigurableService implements SyncClien
         return $deliveryExecutionVariables;
     }
 
+    /**
+     * @param $deliveryId
+     * @return mixed
+     */
     protected function getResultStorage($deliveryId)
     {
         return $this->getServiceLocator()->get(ResultServerService::SERVICE_ID)->getResultStorage($deliveryId);
     }
 
+    /**
+     * @return ServiceProxy
+     */
     protected function getServiceProxy()
     {
         if (!$this->serviceProxy) {

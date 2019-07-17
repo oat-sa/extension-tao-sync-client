@@ -1,17 +1,17 @@
 <?php
 
 use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderService;
-use oat\taoSyncClient\model\syncPackage\SyncPackageService;
 use \oat\taoSyncClient\model\dataProvider\providers\DeliveryLogDataProviderService;
 use \oat\taoSyncClient\model\dataProvider\providers\LtiUserDataProviderService;
 use \oat\taoSyncClient\model\dataProvider\providers\ResultDataProviderService;
 use \oat\taoSyncClient\model\dataProvider\providers\TestSessionDataProviderService;
+use oat\taoSyncClient\model\syncQueue\SyncQueueInterface;
 
 return new SyncClientDataProviderService([
     SyncClientDataProviderService::OPTION_PROVIDERS => [
-        SyncPackageService::PARAM_DELIVERY_LOG => DeliveryLogDataProviderService::class,
-        SyncPackageService::PARAM_LTI_USER     => LtiUserDataProviderService::class,
-        SyncPackageService::PARAM_RESULTS      => ResultDataProviderService::class,
-        SyncPackageService::PARAM_TEST_SESSION => TestSessionDataProviderService::class,
+        SyncQueueInterface::PARAM_EVENT_TYPE_DELIVERY_LOG => DeliveryLogDataProviderService::class,
+        SyncQueueInterface::PARAM_EVENT_TYPE_LTI_USER     => LtiUserDataProviderService::class,
+        SyncQueueInterface::PARAM_EVENT_TYPE_RESULTS      => ResultDataProviderService::class,
+        SyncQueueInterface::PARAM_EVENT_TYPE_TEST_SESSION => TestSessionDataProviderService::class,
     ]
 ]);

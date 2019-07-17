@@ -15,32 +15,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  * Copyright (c) 2019  (original work) Open Assessment Technologies SA;
+ *
+ * @author Oleksandr Zagovorychev <zagovorichev@gmail.com>
  */
 
-namespace oat\taoSyncClient\model\dataProvider\providers;
+namespace oat\taoSyncClient\model\dataProvider;
 
-use oat\oatbox\service\ConfigurableService;
-use oat\taoProctoring\model\deliveryLog\DeliveryLog;
-use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderInterface;
 
-class DeliveryLogDataProviderService extends ConfigurableService implements SyncClientDataProviderInterface
+interface SyncClientDataProviderServiceInterface extends SyncClientDataProviderInterface
 {
-    /**
-     * @param array $synchronizableIds
-     * @return array
-     */
-    public function getData($synchronizableIds = [])
-    {
-        return $this->getDeliveryLog()->search(
-                [DeliveryLog::ID => $synchronizableIds],
-                ['shouldDecodeData' => false]);
-    }
+    const SERVICE_ID = 'taoSyncClient/SyncClientDataProviderService';
+    const OPTION_PROVIDERS = 'providers';
 
     /**
-     * @return array|DeliveryLog
+     * Getting provider from the initialized providers in the $this->getOption(self::OPTION_PROVIDERS)
+     * @param string $type
+     * @return SyncClientDataProviderInterface
      */
-    protected function getDeliveryLog()
-    {
-        return $this->getServiceLocator()->get(DeliveryLog::SERVICE_ID);
-    }
+    public function getProvider($type = '');
 }

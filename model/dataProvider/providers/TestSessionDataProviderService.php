@@ -17,12 +17,17 @@
  * Copyright (c) 2019  (original work) Open Assessment Technologies SA;
  */
 
-namespace oat\taoSyncClient\model\dataProvider;
+namespace oat\taoSyncClient\model\dataProvider\providers;
 
+use oat\oatbox\service\ConfigurableService;
+use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderInterface;
 
-use Zend\ServiceManager\ServiceLocatorAwareInterface;
-
-interface SyncClientDataProviderInterface extends ServiceLocatorAwareInterface
+class TestSessionDataProviderService extends ConfigurableService implements SyncClientDataProviderInterface
 {
-    public function getData($data = []);
+
+    public function getData($synchronizableIds = [])
+    {
+        //something terrible goes here
+        return [];
+    }
 }

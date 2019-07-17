@@ -25,25 +25,46 @@ namespace oat\taoSyncClient\model\syncPackage\migration;
 use common_Logger;
 use common_persistence_Manager;
 use common_persistence_SqlPersistence;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Schema\SchemaException;
 use Doctrine\DBAL\Types\Type;
 use oat\oatbox\service\ConfigurableService;
-use PDO;
 
 class RdsMigrationService extends ConfigurableService implements MigrationInterface
 {
     const TABLE_NAME = 'sync_client_migrations';
     const OPTION_PERSISTENCE = 'persistence';
 
+    public function getMigration($migrationId = 0)
+    {
+        $query = $this->getQueryBuilder()
+            ->select('*')
+            ->from(self::TABLE_NAME)
+            ->where(self::PARAM_SYNC_ID . ' = :syncId')
+            ->setParameter('syncId', $migrationId)
+            ->orderBy(self::PARAM_CREATED_AT)
+            ->setMaxResults(1);
+
+        $result = $query->execute()->fetchAll();
+        return $result ? current($result) : [];
+    }
+
+    /**
+     * Returns the QueryBuilder
+     *
+     * @return QueryBuilder
+     */
+    private function getQueryBuilder()
+    {
+        return $this->getPersistence()->getPlatform()->getQueryBuilder();
+    }
+
     /**
      * @return array
      */
     public function getNextMigration()
     {
-        $sql = 'SELECT * FROM ' . self::TABLE_NAME . ' WHERE ' . self::PARAM_SYNC_ID . ' = ? ORDER BY ' . self::PARAM_ID . ' LIMIT ?';
-        $parameters = ['', 1];
-        $stmt = $this->getPersistence()->query($sql, $parameters);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->getMigration();
     }
 
     public function add($packageName)

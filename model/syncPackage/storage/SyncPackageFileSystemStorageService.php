@@ -22,6 +22,8 @@
 namespace oat\taoSyncClient\model\syncPackage\storage;
 
 
+use common_Exception;
+use League\Flysystem\FileExistsException;
 use oat\oatbox\filesystem\Directory;
 use oat\oatbox\filesystem\FileSystemService;
 use oat\oatbox\service\ConfigurableService;
@@ -30,6 +32,7 @@ class SyncPackageFileSystemStorageService extends ConfigurableService implements
 {
     const FILESYSTEM_ID = 'taoSyncClient';
     const STORAGE_NAME = 'packages';
+    const FILE_PREFIX = 'syncPackage';
 
     public function isValid()
     {
@@ -37,19 +40,17 @@ class SyncPackageFileSystemStorageService extends ConfigurableService implements
     }
 
     /**
-     * @param string $packageName
-     * @return string Path to the File
+     * @param array $data
+     * @return bool
+     * @throws FileExistsException
+     * @throws common_Exception
      */
-    public function getPackagePath($packageName = '')
+    public function createPackage($data = [])
     {
-        return $packageName;
-    }
-
-    public function createPackage($name = '', $data = [])
-    {
-        // TODO: Implement create() method.
-        $this->addMigration();
-        $path = $this->createFile();
+        $fileName = self::FILE_PREFIX.'_'.time().'.json';
+        $file = $this->getStorageDir()
+            ->getFile($fileName);
+        return $file->write(json_encode($data)) ? $fileName : false;
     }
 
     /**

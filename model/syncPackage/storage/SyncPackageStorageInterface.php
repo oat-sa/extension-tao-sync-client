@@ -32,18 +32,10 @@ interface SyncPackageStorageInterface
 
     /**
      * Create new package
-     * @param string $name
      * @param array $data
      * @return string package name
      */
-    public function createPackage($name = '', $data = []);
-
-    /**
-     * Getting the path which allow us to get this package
-     * @param $packageName string
-     * @return string
-     */
-    public function getPackagePath($packageName = '');
+    public function createPackage($data = []);
 
     /**
      * @return void

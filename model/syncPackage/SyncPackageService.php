@@ -123,7 +123,9 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
                 $data[] = $this->getData($task);
                 $reportCounts = $this->increaseTypeCount($reportCounts, $task[SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_TYPE]);
             }
-            $migrationId = $this->getStorageService()->createPackage($data);
+            $packageFileName = $this->getStorageService()->createPackage($data);
+            // @todo finished here
+            $migrationId = $this->getMigrationService()->add($packageFileName);
             $migratedCount = $this->getSyncQueueService()->markAsMigrated($migrationId, $queuedTasks);
 
             $report->add(common_report_Report::createInfo($this->getReportMessage($migrationId, $migratedCount, $reportCounts)));

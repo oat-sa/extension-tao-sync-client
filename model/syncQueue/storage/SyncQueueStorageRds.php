@@ -25,10 +25,10 @@ namespace oat\taoSyncClient\model\syncQueue\storage;
 use common_Logger;
 use common_persistence_Manager;
 use common_persistence_SqlPersistence;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Schema\SchemaException;
 use Doctrine\DBAL\Types\Type;
 use oat\oatbox\service\ConfigurableService;
-use PDO;
 
 class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorageInterface
 {
@@ -45,25 +45,38 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
         parent::__construct($options);
     }
 
-    public function getQueued($types = [], $limit = 0)
+    public function getQueued($types = [], $limit = 10000)
     {
-        $sql = 'SELECT * FROM ' . self::TABLE_NAME . ' WHERE ' . self::PARAM_SYNC_MIGRATION_ID . ' = ? ORDER BY ' . self::PARAM_ID;
-        $parameters = [''];
+        $query = $this->getQueryBuilder()
+            ->select('*')
+            ->from(self::TABLE_NAME)
+            ->where(self::PARAM_SYNC_MIGRATION_ID . ' = :syncMigrationId')
+            ->setParameter('syncMigrationId', 0)
+            ->orderBy(self::PARAM_CREATED_AT)
+            ->setMaxResults($limit);
 
-        if ($limit > 0) {
-            $sql .=  ' LIMIT ?';
-            $parameters[] = $limit;
-        }
-        $stmt = $this->getPersistence()->query($sql, $parameters);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $query->execute()->fetchAll();
     }
 
-    public function getAll($limit = 1000, $offset = 0)
+    public function getAll($limit = 10000, $offset = 0)
     {
-        $sql = 'SELECT * FROM ' . self::TABLE_NAME . ' ORDER BY ' . self::PARAM_ID . ' LIMIT ? OFFSET ?';
-        $parameters = [0];
-        $stmt = $this->getPersistence()->query($sql, $parameters);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $query = $this->getQueryBuilder()
+            ->select('*')
+            ->from(self::TABLE_NAME)
+            ->orderBy(self::PARAM_CREATED_AT)
+            ->setMaxResults($limit);
+
+        return $query->execute()->fetchAll();
+    }
+
+    /**
+     * Returns the QueryBuilder
+     *
+     * @return QueryBuilder
+     */
+    private function getQueryBuilder()
+    {
+        return $this->getPersistence()->getPlatform()->getQueryBuilder();
     }
 
     public function insert(array $action)

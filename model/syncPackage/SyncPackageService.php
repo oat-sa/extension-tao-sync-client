@@ -25,14 +25,19 @@ namespace oat\taoSyncClient\model\syncPackage;
 use common_exception_Error;
 use common_report_Report;
 use oat\oatbox\service\ConfigurableService;
-use oat\taoLti\models\classes\user\LtiUserService;
+use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderInterface;
+use oat\taoSyncClient\model\syncPackage\migration\MigrationInterface;
+use oat\taoSyncClient\model\syncPackage\storage\SyncPackageStorageInterface;
+use oat\taoSyncClient\model\syncQueue\storage\SyncQueueStorageInterface;
 use oat\taoSyncClient\model\syncQueue\SyncQueueInterface;
+use oat\taoSyncClient\model\syncQueue\SyncQueueService;
 
 class SyncPackageService extends ConfigurableService implements SyncPackageInterface
 {
     const OPTION_STORAGE = 'storage';
-    const OPTION_SERVICE_PROVIDER = '';
-    const OPTION_SYNC_QUEUE = 'sync-queue';
+    const OPTION_DATA_PROVIDER = 'dataProvider';
+    const OPTION_MIGRATION = 'migration';
+    const OPTION_MIGRATION_PARAMS = 'migration_params';
 
     const PARAM_LTI_USER = 'lti-user';
     const PARAM_DELIVERY_LOG = 'delivery-log';
@@ -40,11 +45,31 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
     const PARAM_TEST_SESSION = 'test-session';
 
     /**
+     * @var SyncPackageStorageInterface
+     */
+    private $storageService;
+
+    /**
+     * @var SyncClientDataProviderInterface
+     */
+    private $dataProviderService;
+
+    /**
+     * @var MigrationInterface
+     */
+    private $migrationService;
+
+    /**
      * @return mixed|storage\SyncPackageStorageInterface
      */
     public function getStorageService()
     {
-        return $this->getOption(self::OPTION_STORAGE);
+        if (!$this->storageService) {
+            $storageClass = $this->getOption(self::OPTION_STORAGE);
+            $this->storageService = new $storageClass;
+            $this->storageService->setServiceLocator($this->getServiceLocator());
+        }
+        return $this->storageService;
     }
 
     /**
@@ -52,107 +77,88 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
      */
     public function getSyncQueueService()
     {
-        return $this->getOption(self::OPTION_SYNC_QUEUE);
+        return $this->getServiceLocator()->get(SyncQueueService::SERVICE_ID);
     }
 
     /**
-     * @param $dataTypes
+     * @return mixed|SyncClientDataProviderInterface
+     */
+    public function getDataProviderService()
+    {
+        if (!$this->dataProviderService) {
+            $dataProviderClass = $this->getOption(self::OPTION_DATA_PROVIDER);
+            $this->dataProviderService = new $dataProviderClass;
+            $this->dataProviderService->setServiceLocator($this->getServiceLocator());
+
+        }
+        return $this->dataProviderService;
+    }
+
+    /**
+     * @return MigrationInterface
+     */
+    public function getMigrationService()
+    {
+        if (!$this->migrationService) {
+            $migrationClass = $this->getOption(self::OPTION_MIGRATION);
+            $this->migrationService = new $migrationClass;
+            $this->migrationService->setServiceLocator($this->getServiceLocator());
+        }
+        return $this->migrationService;
+    }
+
+    /**
+     * @param array $dataTypes
      * @return common_report_Report
      * @throws common_exception_Error
      */
-    public function create($dataTypes)
+    public function create($dataTypes = [])
     {
         $data = [];
         $report = common_report_Report::createInfo('Package creation started');
         if ($this->getStorageService()->isValid()) {
+            $reportCounts = [];
+            $queuedTasks = $this->getSyncQueueService()->getTasks($dataTypes, $this->getOption('limit'));
+            foreach ($queuedTasks as $task) {
+                $data[] = $this->getData($task);
+                $reportCounts = $this->increaseTypeCount($reportCounts, $task[SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_TYPE]);
+            }
+            $migrationId = $this->getStorageService()->createPackage($data);
+            $migratedCount = $this->getSyncQueueService()->markAsMigrated($migrationId, $queuedTasks);
 
-            $queuedData = $this->getSyncQueueService()->getTasks($dataTypes, $this->getOption('limit'));
-            $this->getData($task);
-            /*foreach ($queuedData as $task) {
-                $data[] = $this->fillData($task);
-            }*/
-
-            $this->getStorageService()->save($data);
+            $report->add(common_report_Report::createInfo($this->getReportMessage($migrationId, $migratedCount, $reportCounts)));
         }
-
         return $report;
     }
 
-    private function getData()
+    private function increaseTypeCount($reportCounts, $type)
     {
-        $this->getDataProviderService()
-            ->setServiceLocator($this->getServiceLocator())
-            ->getData($task);
-
-    }
-
-    /**
-     * Collect the data by the task
-     * @param $task
-     */
-    private function fillData($task)
-    {
-        switch ($task[SyncQueueInterface::]) {
-            case self::PARAM_LTI_USER:
-                $this->getLtiUserDataProvider
-                $data[self::PARAM_LTI_USER][] = $this->getLtiUser();
-                break;
-            case self::PARAM_DELIVERY_LOG:
-                $data[self::PARAM_DELIVERY_LOG][] = $this->getDeliveryLog();
-                break;
-            case self::PARAM_RESULTS:
-                $data[self::PARAM_RESULTS][] = $this->getResults();
-                break;
-            case self::PARAM_TEST_SESSION:
-                $data[self::PARAM_TEST_SESSION][] = $this->getTestSession();
-                break;
-            default:
-                $report->add(common_report_Report::createFailure('Data type ' . $requiredDataType . ' not found'));
+        if (!array_key_exists($type, $reportCounts)) {
+            $reportCounts[$type] = 0;
         }
+        $reportCounts[$type]++;
+        return $reportCounts;
+    }
+
+    private function getReportMessage($migrationId, $migratedCount, $reportCounts)
+    {
+        $reportMessage = 'Within migration '.(int)$migrationId.' were migrated '. (int)$migratedCount. ' records from the SyncQueue';
+        $reportMessage .= "\nMigrated types:\n";
+        foreach ($reportCounts as $key => $reportCount) {
+            $reportMessage .= $key.': '.(int)$reportCount."\n";
+        }
+        return $reportMessage;
     }
 
     /**
-     * Lti User data
+     * Get prepared data from the data providers
+     * @param $task
      * @return array
      */
-    private function getLtiUser()
+    private function getData($task)
     {
-        /** @var LtiUserService $ltiUserService */
-        $ltiUserService = $this->getServiceLocator()->get(LtiUserService::SERVICE_ID);
-
-        return $data;
+        return $this->getDataProviderService()
+            ->setServiceLocator($this->getServiceLocator())
+            ->getData($task);
     }
-
-    /*
-        public function getPath()
-        {
-            return $this->getOption(self::OPTION_STORAGE);
-        }
-
-        public function setPath($path = '')
-        {
-            $oldPath = $this->getPath();
-            $this->setOption(self::OPTION_STORAGE, $path);
-            if (!$this->checkPath()) {
-                // reset if new path can't be used
-                $this->setOption(self::OPTION_STORAGE, $oldPath);
-            }
-        }
-
-        public function checkPath()
-        {
-            $path = $this->getPath();
-            FileSystem::class;
-        }
-
-        public function getStorage()
-        {
-            public function getReportStorage()
-        {
-            return $this->getServiceManager()
-                ->get(FileSystemService::SERVICE_ID)
-                ->getDirectory('taoSyncClient')
-                ->getDirectory(self::OPTION_STORAGE);
-        }
-        }*/
 }

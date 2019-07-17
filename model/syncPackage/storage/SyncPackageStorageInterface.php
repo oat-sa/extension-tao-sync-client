@@ -25,21 +25,33 @@ namespace oat\taoSyncClient\model\syncPackage\storage;
 interface SyncPackageStorageInterface
 {
     /**
-     * Create new package
-     * @return string package name
+     * checks that storage can be used
+     * @return bool
      */
-    public function create();
+    public function isValid();
 
     /**
-     * get package content
+     * Create new package
+     * @param string $name
+     * @param array $data
+     * @return string package name
+     */
+    public function createPackage($name = '', $data = []);
+
+    /**
+     * Getting the path which allow us to get this package
      * @param $packageName string
      * @return string
      */
-    public function get($packageName = '');
+    public function getPackagePath($packageName = '');
 
     /**
-     * list of stored packages
-     * @return array
+     * @return void
      */
-    public function getList();
+    public function createStorage();
+
+    /**
+     * @return string
+     */
+    public function getStorageName();
 }

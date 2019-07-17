@@ -23,11 +23,28 @@ namespace oat\taoSyncClient\scripts\update;
 
 
 use common_ext_ExtensionUpdater;
+use common_report_Report;
+use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderInterface;
+use oat\taoSyncClient\model\syncPackage\migration\RdsMigrationService;
+use oat\taoSyncClient\model\syncPackage\storage\SyncPackageFileSystemStorageService;
+use oat\taoSyncClient\model\syncPackage\SyncPackageService;
 
 class Updater extends common_ext_ExtensionUpdater
 {
     public function update($initialVersion)
     {
-        // $this->skip('0.1.0', '0.2.0');
+        if ($this->isVersion('0.1.0')) {
+            $this->getServiceManager()->register(
+                SyncPackageService::SERVICE_ID,
+                new SyncPackageService([
+                    SyncPackageService::OPTION_MIGRATION => RdsMigrationService::class,
+                    SyncPackageService::OPTION_MIGRATION_PARAMS => ['default'],
+                    SyncPackageService::OPTION_DATA_PROVIDER => SyncClientDataProviderInterface::class,
+                    SyncPackageService::OPTION_STORAGE => SyncPackageFileSystemStorageService::class,
+                ])
+            );
+            $this->addReport(common_report_Report::createInfo('Create migrations and storage: php index.php \'oat\taoSyncClient\scripts\install\RegisterSyncPackageService\''));
+            $this->setVersion('0.2.0');
+        }
     }
 }

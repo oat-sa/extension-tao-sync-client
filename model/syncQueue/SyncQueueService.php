@@ -108,6 +108,13 @@ class SyncQueueService extends ConfigurableService implements SyncQueueInterface
      */
     public function getTasks(array $dataTypes = [], $limit = 0, $synchronized = false)
     {
-        return $this->getStorageService()->getQueued($limit);
+        return $this->getStorageService()->getQueued($dataTypes, $limit);
+    }
+
+    public function markAsMigrated($migrationId = 0, $queuedTasks = [])
+    {
+        $updatedCount = 0;
+        // @todo
+        return $updatedCount;
     }
 }

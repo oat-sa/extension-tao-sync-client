@@ -28,16 +28,18 @@ interface SyncQueueStorageInterface
     const PARAM_SYNCHRONIZABLE_ID = 'synchronizable_id';
     const PARAM_SYNCHRONIZABLE_TYPE = 'synchronizable_type';
     const PARAM_EVENT_TYPE = 'event_type';
-    const PARAM_SYNC_ID = 'sync_id';
+    // id from the migrationService
+    const PARAM_SYNC_MIGRATION_ID = 'sync_migration_id';
     const PARAM_CREATED_AT = 'created_at';
     const PARAM_UPDATED_AT = 'updated_at';
 
     /**
      * Get only not synchronized data from the queue
+     * @param array $syncTypes = filter by the param synchronizable_type
      * @param int $limit - (0 - all the data that wasn't synchronized)
      * @return array
      */
-    public function getQueued($limit = 0);
+    public function getQueued($syncTypes = [], $limit = 0);
 
     /**
      * Get all the data synchronized and not
@@ -59,5 +61,5 @@ interface SyncQueueStorageInterface
      * @param $id
      * @return mixed
      */
-    public function setSyncId($id);
+    public function setMigrationId($id);
 }

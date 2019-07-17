@@ -36,7 +36,7 @@ class SyncClientDataProviderService extends ConfigurableService implements SyncC
     private $availableProviders;
     /**
      * array of created providers
-     * @var SyncClientCustomDataProviderInterface[]
+     * @var SyncClientDataProviderInterface[]
      */
     private $providers;
 
@@ -46,7 +46,7 @@ class SyncClientDataProviderService extends ConfigurableService implements SyncC
      * @return array
      * @throws SyncClientException
      */
-    public function getData($tasks)
+    public function getData($tasks = [])
     {
         $groupedTasks = [];
         $data = [];
@@ -61,7 +61,7 @@ class SyncClientDataProviderService extends ConfigurableService implements SyncC
 
     /**
      * @param string $type
-     * @return SyncClientCustomDataProviderInterface
+     * @return SyncClientDataProviderInterface
      * @throws SyncClientException
      */
     private function getProvider($type)
@@ -71,7 +71,7 @@ class SyncClientDataProviderService extends ConfigurableService implements SyncC
         }
         if (!array_key_exists($type, $this->providers)) {
             if (!array_key_exists($type, $this->availableProviders)
-                || !$this->availableProviders[$type] instanceof SyncClientCustomDataProviderInterface) {
+                || !$this->availableProviders[$type] instanceof SyncClientDataProviderInterface) {
                 throw new SyncClientException('Incorrect data provider');
             }
             $this->providers[$type] = new $this->availableProviders[$type];

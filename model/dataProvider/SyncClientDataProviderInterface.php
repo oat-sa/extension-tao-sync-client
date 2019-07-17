@@ -24,5 +24,5 @@ use Zend\ServiceManager\ServiceLocatorAwareInterface;
 
 interface SyncClientDataProviderInterface extends ServiceLocatorAwareInterface
 {
-    public function getData();
+    public function getData($data = []);
 }

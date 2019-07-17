@@ -20,9 +20,9 @@
 namespace oat\taoSyncClient\model\dataProvider\providers;
 
 use oat\oatbox\service\ConfigurableService;
-use oat\taoSyncClient\model\dataProvider\SyncClientCustomDataProviderInterface;
+use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderInterface;
 
-class TestSessionDataProviderService extends ConfigurableService implements SyncClientCustomDataProviderInterface
+class TestSessionDataProviderService extends ConfigurableService implements SyncClientDataProviderInterface
 {
 
     public function getData($synchronizableIds = [])

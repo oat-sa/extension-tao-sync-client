@@ -24,7 +24,7 @@ use oat\taoDelivery\model\execution\DeliveryExecution;
 use oat\taoDelivery\model\execution\ServiceProxy;
 use oat\taoDeliveryRdf\helper\DetectTestAndItemIdentifiersHelper;
 use oat\taoResultServer\models\classes\ResultServerService;
-use oat\taoSyncClient\model\dataProvider\SyncClientCustomDataProviderInterface;
+use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderInterface;
 
 /**
  * TODO: rewrite receiving data from ResultService. In old code it is using SyncEncryptedResultService
@@ -32,7 +32,7 @@ use oat\taoSyncClient\model\dataProvider\SyncClientCustomDataProviderInterface;
  * Class ResultDataProviderService
  * @package oat\taoSyncClient\model\dataProvider\providers
  */
-class ResultDataProviderService extends ConfigurableService implements SyncClientCustomDataProviderInterface
+class ResultDataProviderService extends ConfigurableService implements SyncClientDataProviderInterface
 {
 
     private $serviceProxy;

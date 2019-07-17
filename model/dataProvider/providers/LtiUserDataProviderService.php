@@ -22,14 +22,14 @@ namespace oat\taoSyncClient\model\dataProvider\providers;
 use oat\oatbox\service\ConfigurableService;
 use oat\taoEncryption\Service\Lti\LaunchData\EncryptedLtiLaunchDataStorage;
 use oat\taoLti\models\classes\user\LtiUserService;
-use oat\taoSyncClient\model\dataProvider\SyncClientCustomDataProviderInterface;
+use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderInterface;
 
 /**
  * TODO: rewrite without using taoEncryption
  * Class LtiUserDataProviderService
  * @package oat\taoSyncClient\model\dataProvider\providers
  */
-class LtiUserDataProviderService extends ConfigurableService implements SyncClientCustomDataProviderInterface
+class LtiUserDataProviderService extends ConfigurableService implements SyncClientDataProviderInterface
 {
 
     /**

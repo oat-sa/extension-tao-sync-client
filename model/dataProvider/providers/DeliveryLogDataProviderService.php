@@ -21,9 +21,9 @@ namespace oat\taoSyncClient\model\dataProvider\providers;
 
 use oat\oatbox\service\ConfigurableService;
 use oat\taoProctoring\model\deliveryLog\DeliveryLog;
-use oat\taoSyncClient\model\dataProvider\SyncClientCustomDataProviderInterface;
+use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderInterface;
 
-class DeliveryLogDataProviderService extends ConfigurableService implements SyncClientCustomDataProviderInterface
+class DeliveryLogDataProviderService extends ConfigurableService implements SyncClientDataProviderInterface
 {
     /**
      * @param array $synchronizableIds

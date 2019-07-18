@@ -26,7 +26,7 @@ use common_ext_ExtensionUpdater;
 use common_report_Report;
 use oat\taoSyncClient\model\dataProvider\providers\DeliveryLogDataProviderService;
 use oat\taoSyncClient\model\dataProvider\providers\LtiUserDataProviderService;
-use oat\taoSyncClient\model\dataProvider\providers\ResultDataProviderService;
+use oat\taoSyncClient\model\dataProvider\providers\ResultsDataProviderService;
 use oat\taoSyncClient\model\dataProvider\providers\TestSessionDataProviderService;
 use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderService;
 use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderServiceInterface;
@@ -54,7 +54,7 @@ class Updater extends common_ext_ExtensionUpdater
                     SyncClientDataProviderServiceInterface::OPTION_PROVIDERS => [
                         SyncQueueInterface::PARAM_EVENT_TYPE_DELIVERY_LOG => DeliveryLogDataProviderService::class,
                         SyncQueueInterface::PARAM_EVENT_TYPE_LTI_USER     => LtiUserDataProviderService::class,
-                        SyncQueueInterface::PARAM_EVENT_TYPE_RESULTS      => ResultDataProviderService::class,
+                        SyncQueueInterface::PARAM_EVENT_TYPE_RESULTS      => ResultsDataProviderService::class,
                         SyncQueueInterface::PARAM_EVENT_TYPE_TEST_SESSION => TestSessionDataProviderService::class,
                     ]
                 ]));

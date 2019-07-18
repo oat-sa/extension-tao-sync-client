@@ -19,33 +19,34 @@
 
 namespace oat\taoSyncClient\model\dataProvider\providers;
 
+use common_exception_NotFound;
+use core_kernel_persistence_Exception;
 use oat\oatbox\service\ConfigurableService;
 use oat\taoDelivery\model\execution\DeliveryExecution;
 use oat\taoDelivery\model\execution\ServiceProxy;
 use oat\taoDeliveryRdf\helper\DetectTestAndItemIdentifiersHelper;
+use oat\taoResultServer\models\classes\ResultManagement;
 use oat\taoResultServer\models\classes\ResultServerService;
 use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderInterface;
+use taoResultServer_models_classes_ReadableResultStorage;
+use taoResultServer_models_classes_WritableResultStorage;
 
 /**
- * TODO: rewrite receiving data from ResultService. In old code it is using SyncEncryptedResultService
- *
  * Class ResultDataProviderService
  * @package oat\taoSyncClient\model\dataProvider\providers
  */
-class ResultDataProviderService extends ConfigurableService implements SyncClientDataProviderInterface
+class ResultsDataProviderService extends ConfigurableService implements SyncClientDataProviderInterface
 {
-
-    private $serviceProxy;
-
     /**
-     * @param array $synchronizableIds
+     * @param array $deliveryExecutionIds
      * @return array
-     * @throws \common_exception_NotFound
-     * @throws \core_kernel_persistence_Exception
+     * @throws common_exception_NotFound
+     * @throws core_kernel_persistence_Exception
      */
-    public function getData($synchronizableIds = [])
+    public function getData($deliveryExecutionIds = [])
     {
-        foreach ($synchronizableIds as $deliveryExecutionId) {
+        $results = [];
+        foreach ($deliveryExecutionIds as $deliveryExecutionId) {
             /** @var DeliveryExecution $deliveryExecution */
             $deliveryExecution = $this->getServiceProxy()->getDeliveryExecution($deliveryExecutionId);
             $variables = $this->getDeliveryExecutionVariables($deliveryExecution->getDelivery()->getUri(), $deliveryExecutionId);
@@ -56,7 +57,7 @@ class ResultDataProviderService extends ConfigurableService implements SyncClien
                 'variables'           => $variables,
             ];
         }
-        return $results ?? [];
+        return $results;
     }
 
     /**
@@ -65,7 +66,7 @@ class ResultDataProviderService extends ConfigurableService implements SyncClien
      * @param $deliveryExecutionId
      * @return array
      */
-    protected function getDeliveryExecutionDetails($deliveryExecutionId)
+    private function getDeliveryExecutionDetails($deliveryExecutionId)
     {
         /** @var DeliveryExecution $deliveryExecution */
         $deliveryExecution = $this->getServiceProxy()->getDeliveryExecution($deliveryExecutionId);
@@ -78,7 +79,7 @@ class ResultDataProviderService extends ConfigurableService implements SyncClien
                 'finishtime' => $deliveryExecution->getFinishTime(),
                 'state'      => $deliveryExecution->getState()->getUri(),
             ];
-        } catch (\common_exception_NotFound $e) {
+        } catch (common_exception_NotFound $e) {
             return [];
         }
     }
@@ -89,45 +90,49 @@ class ResultDataProviderService extends ConfigurableService implements SyncClien
      * @param $deliveryId
      * @param $deliveryExecutionId
      * @return array
-     * @throws \core_kernel_persistence_Exception
+     * @throws core_kernel_persistence_Exception
      */
-    protected function getDeliveryExecutionVariables($deliveryId, $deliveryExecutionId)
+    private function getDeliveryExecutionVariables($deliveryId, $deliveryExecutionId)
     {
         $variables = $this->getResultStorage($deliveryId)->getDeliveryVariables($deliveryExecutionId);
         $deliveryExecutionVariables = [];
         foreach ($variables as $variable) {
-            $variable = (array)$variable[0];
+            $variable = (array) current($variable);
+            $test = $this->getVariable('test', $variable);
+            $item = $this->getVariable('item', $variable);
             list($testIdentifier, $itemIdentifier) = (new DetectTestAndItemIdentifiersHelper())
-                ->detect($deliveryId, $variable['test'] ?? null, $variable['item'] ?? null);
+                ->detect($deliveryId, $test, $item);
             $deliveryExecutionVariables[] = [
-                'type'       => $variable['class'],
-                'callIdTest' => $variable['callIdTest'] ?? null,
-                'callIdItem' => $variable['callIdItem'] ?? null,
+                'type'       => $this->getVariable('class', $variable),
+                'callIdTest' => $this->getVariable('callIdTest', $variable),
+                'callIdItem' => $this->getVariable('callIdItem', $variable),
                 'test'       => $testIdentifier,
                 'item'       => $itemIdentifier,
-                'data'       => $variable['variable'],
+                'data'       => $this->getVariable('variable', $variable),
             ];
         }
         return $deliveryExecutionVariables;
     }
 
+    private function getVariable($name = '', array $variables = [])
+    {
+        return array_key_exists($name, $variables) ? $variables[$name] : null;
+    }
+
     /**
      * @param $deliveryId
-     * @return mixed
+     * @return taoResultServer_models_classes_ReadableResultStorage|taoResultServer_models_classes_WritableResultStorage|ResultManagement
      */
-    protected function getResultStorage($deliveryId)
+    private function getResultStorage($deliveryId)
     {
         return $this->getServiceLocator()->get(ResultServerService::SERVICE_ID)->getResultStorage($deliveryId);
     }
 
     /**
-     * @return ServiceProxy
+     * @return array|ServiceProxy
      */
-    protected function getServiceProxy()
+    private function getServiceProxy()
     {
-        if (!$this->serviceProxy) {
-            $this->serviceProxy = $this->getServiceLocator()->get(ServiceProxy::SERVICE_ID);
-        }
-        return $this->serviceProxy;
+        return $this->getServiceLocator()->get(ServiceProxy::SERVICE_ID);
     }
 }

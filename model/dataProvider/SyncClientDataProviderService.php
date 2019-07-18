@@ -44,9 +44,7 @@ class SyncClientDataProviderService extends ConfigurableService implements SyncC
     {
         $data = [];
         foreach ($this->getGroupedTasks($tasks) as $type => $items) {
-            if ($type === 'lti_user') {
-                $data[$type] = $this->getProvider($type)->getData($items);
-            }
+            $data[$type] = $this->getProvider($type)->getData($items);
         }
         return $data;
     }

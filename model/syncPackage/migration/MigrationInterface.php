@@ -41,6 +41,13 @@ interface MigrationInterface extends ServiceLocatorAwareInterface
     public function getNextMigration();
 
     /**
+     * Getting migration id by package name
+     * @param string $packageName
+     * @return int|bool
+     */
+    public function getMigrationIdByPackage($packageName);
+
+    /**
      * add new migration
      * @param $name string
      * @return bool

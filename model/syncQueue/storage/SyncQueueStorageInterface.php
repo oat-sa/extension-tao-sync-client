@@ -34,14 +34,6 @@ interface SyncQueueStorageInterface
     const PARAM_UPDATED_AT = 'updated_at';
 
     /**
-     * Get only not synchronized data from the queue
-     * @param array $syncTypes = filter by the param synchronizable_type
-     * @param int $limit - (0 - all the data that wasn't synchronized)
-     * @return array
-     */
-    public function getQueued($syncTypes = [], $limit = 0);
-
-    /**
      * Get all the data synchronized and not
      * @param int $limit
      * @param int $offset
@@ -56,10 +48,19 @@ interface SyncQueueStorageInterface
      */
     public function insert(array $action);
 
+
     /**
-     * Mark the record as synchronized
-     * @param $id
-     * @return mixed
+     * * Mark the record as synchronized
+     * @param int $migrationId
+     * @param array $taskIds
+     * @return bool
      */
-    public function setMigrationId($id);
+    public function setMigrationId($migrationId, $taskIds = []);
+
+    /**
+     * @param array $dataTypes
+     * @param int $limit
+     * @return array
+     */
+    public function getAggregatedQueued($dataTypes, $limit);
 }

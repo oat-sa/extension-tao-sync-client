@@ -22,7 +22,9 @@
 namespace oat\taoSyncClient\model\syncPackage\storage;
 
 
-interface SyncPackageStorageInterface
+use Zend\ServiceManager\ServiceLocatorAwareInterface;
+
+interface SyncPackageStorageInterface extends ServiceLocatorAwareInterface
 {
     /**
      * checks that storage can be used

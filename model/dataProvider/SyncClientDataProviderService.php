@@ -44,9 +44,9 @@ class SyncClientDataProviderService extends ConfigurableService implements SyncC
     {
         $data = [];
         foreach ($this->getGroupedTasks($tasks) as $type => $items) {
-            if ($type === 'delivery_log') {
+            // if ($type === 'test_session') {
                 $data[$type] = $this->getProvider($type)->getData($items);
-            }
+            // }
         }
         return $data;
     }
@@ -62,12 +62,12 @@ class SyncClientDataProviderService extends ConfigurableService implements SyncC
         $groupedTasks = [];
         foreach ($tasks as $key => $task) {
             if (!is_array($task)
-                || !array_key_exists(SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_TYPE, $task)
+                || !array_key_exists(SyncQueueStorageInterface::PARAM_EVENT_TYPE, $task)
                 || !array_key_exists(SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID, $task)
             ) {
                 throw new SyncClientException('Incorrect task format #'.$key);
             }
-            $groupedTasks[$task[SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_TYPE]][] = $task[SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID];
+            $groupedTasks[$task[SyncQueueStorageInterface::PARAM_EVENT_TYPE]][] = $task[SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID];
         }
         return $groupedTasks;
     }

@@ -49,6 +49,10 @@ class Provider implements SyncClientDataProviderInterface
 
 class SyncClientDataProviderServiceTest extends TestCase
 {
+    /**
+     * @throws ReflectionException
+     * @throws SyncClientException
+     */
     public function testGetData()
     {
         $providerService = new SyncClientDataProviderService([
@@ -59,7 +63,7 @@ class SyncClientDataProviderServiceTest extends TestCase
 
         $data = $providerService->getData([
             [
-                SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_TYPE => 'typeName',
+                SyncQueueStorageInterface::PARAM_EVENT_TYPE => 'typeName',
                 SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID => 1
             ]
         ]);
@@ -77,7 +81,7 @@ class SyncClientDataProviderServiceTest extends TestCase
     {
         $providerService = new SyncClientDataProviderService();
         $providerService->getData([
-            [SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_TYPE => 'typeName']
+            [SyncQueueStorageInterface::PARAM_EVENT_TYPE => 'typeName']
         ]);
     }
 
@@ -92,7 +96,7 @@ class SyncClientDataProviderServiceTest extends TestCase
         $providerService = new SyncClientDataProviderService();
         $providerService->getData([
             [
-                SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_TYPE => 'typeName',
+                SyncQueueStorageInterface::PARAM_EVENT_TYPE => 'typeName',
                 SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID => 123,
             ]
         ]);
@@ -113,7 +117,7 @@ class SyncClientDataProviderServiceTest extends TestCase
         ]);
         $providerService->getData([
             [
-                SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_TYPE => 'typeName',
+                SyncQueueStorageInterface::PARAM_EVENT_TYPE => 'typeName',
                 SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID => 123,
             ]
         ]);
@@ -134,7 +138,7 @@ class SyncClientDataProviderServiceTest extends TestCase
         ]);
         $providerService->getData([
             [
-                SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_TYPE => 'typeName',
+                SyncQueueStorageInterface::PARAM_EVENT_TYPE => 'typeName',
                 SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID => 123,
             ]
         ]);
@@ -155,7 +159,7 @@ class SyncClientDataProviderServiceTest extends TestCase
         ]);
         $providerService->getData([
             [
-                SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_TYPE => 'typeName',
+                SyncQueueStorageInterface::PARAM_EVENT_TYPE => 'typeName',
                 SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID => 123,
             ]
         ]);

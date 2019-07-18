@@ -68,7 +68,7 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
     }
 
     /**
-     * @return SyncQueueInterface
+     * @return array|SyncQueueInterface
      */
     public function getSyncQueueService()
     {

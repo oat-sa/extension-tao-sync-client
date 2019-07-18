@@ -25,6 +25,7 @@ namespace oat\taoSyncClient\model\syncQueue\storage;
 use common_Logger;
 use common_persistence_Manager;
 use common_persistence_SqlPersistence;
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Schema\SchemaException;
 use Doctrine\DBAL\Types\Type;
@@ -89,6 +90,22 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
         $sql = 'UPDATE ' . self::TABLE_NAME . ' SET ' . self::PARAM_SYNC_ID . ' = ?, '.self::PARAM_UPDATED_AT.'= ? WHERE ' . self::PARAM_ID . '= ?';
         $parameters = [1, date('Y-m-d H:i:s'), $id];
         return $this->getPersistence()->exec($sql, $parameters);
+    }
+
+    public function isSynchronized($eventType = '', $synchronizedIds = [])
+    {
+        $query = $this->getQueryBuilder()
+            ->select('*')
+            ->from(self::TABLE_NAME)
+            ->where(self::PARAM_EVENT_TYPE, '=:eventType')
+            ->setParameter('eventType', $eventType)
+            ->where(self::PARAM_SYNCHRONIZABLE_ID, 'IN(:ids)')
+            ->setParameter('ids', $synchronizedIds, Connection::PARAM_STR_ARRAY)
+            ->where(self::PARAM_SYNC_MIGRATION_ID . ' = :syncMigrationId')
+            ->setParameter('syncMigrationId', 0)
+            ->orderBy(self::PARAM_CREATED_AT);
+
+        return count($query->execute()->fetchAll()) === 0;
     }
 
     /**

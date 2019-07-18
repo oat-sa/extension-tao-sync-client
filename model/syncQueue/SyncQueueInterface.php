@@ -67,4 +67,12 @@ interface SyncQueueInterface
      * @return int (count of the updated fields)
      */
     public function markAsMigrated($migrationId = 0, $queuedTasks = []);
+
+    /**
+     * Checks that for the provided delivery execution all delivery log data were synchronized
+     * (Example: Test session can't be synchronized without delivery log data)
+     * @param $deliveryExecutionId
+     * @return bool
+     */
+    public function isDeliveryLogSynchronized($deliveryExecutionId);
 }

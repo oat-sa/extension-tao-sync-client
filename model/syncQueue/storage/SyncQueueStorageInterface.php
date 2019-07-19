@@ -62,4 +62,13 @@ interface SyncQueueStorageInterface
      * @return mixed
      */
     public function setMigrationId($id);
+
+    /**
+     * Checks that all synchronizable resources were migrated
+     * (Example: Test session can't be synchronized without delivery log data)
+     * @param string $eventType
+     * @param array $synchronizableIds
+     * @return bool
+     */
+    public function isSynchronized($eventType = '', $synchronizableIds = []);
 }

@@ -23,58 +23,82 @@ namespace oat\taoSyncClient\model\dataProvider;
 use oat\oatbox\service\ConfigurableService;
 use oat\taoSyncClient\model\exception\SyncClientException;
 use oat\taoSyncClient\model\syncQueue\storage\SyncQueueStorageInterface;
+use ReflectionClass;
+use ReflectionException;
 
-class SyncClientDataProviderService extends ConfigurableService implements SyncClientDataProviderInterface
+class SyncClientDataProviderService extends ConfigurableService implements SyncClientDataProviderServiceInterface
 {
-    const OPTION_PROVIDERS = 'providers';
-
-
-    /**
-     * array of available providers from config.
-     * @var array
-     */
-    private $availableProviders;
     /**
      * array of created providers
      * @var SyncClientDataProviderInterface[]
      */
-    private $providers;
-
+    private $providers = [];
 
     /**
      * @param array $tasks
      * @return array
+     * @throws ReflectionException
      * @throws SyncClientException
      */
     public function getData($tasks = [])
     {
-        $groupedTasks = [];
         $data = [];
-        foreach ($tasks as $task) {
-            $groupedTasks[$task['event_type']][] = $task[SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID];
-        }
-        foreach ($groupedTasks as $type => $items) {
+        foreach ($this->getGroupedTasks($tasks) as $type => $items) {
             $data[$type] = $this->getProvider($type)->getData($items);
         }
         return $data;
     }
 
     /**
+     * Group tasks by their data type
+     * @param array $tasks
+     * @return array
+     * @throws SyncClientException
+     */
+    private function getGroupedTasks($tasks = [])
+    {
+        $groupedTasks = [];
+        foreach ($tasks as $key => $task) {
+            if (!is_array($task)
+                || !array_key_exists(SyncQueueStorageInterface::PARAM_EVENT_TYPE, $task)
+                || !array_key_exists(SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID, $task)
+            ) {
+                throw new SyncClientException('Incorrect task format #'.$key);
+            }
+            $groupedTasks[$task[SyncQueueStorageInterface::PARAM_EVENT_TYPE]][] = $task[SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID];
+        }
+        return $groupedTasks;
+    }
+
+    /**
      * @param string $type
      * @return SyncClientDataProviderInterface
      * @throws SyncClientException
+     * @throws ReflectionException
      */
-    private function getProvider($type)
+    public function getProvider($type = '')
     {
-        if (empty($this->availableProviders)) {
-            $this->availableProviders = $this->getOption(self::OPTION_PROVIDERS);
-        }
         if (!array_key_exists($type, $this->providers)) {
-            if (!array_key_exists($type, $this->availableProviders)
-                || !$this->availableProviders[$type] instanceof SyncClientDataProviderInterface) {
-                throw new SyncClientException('Incorrect data provider');
+
+            if (!$this->hasOption(self::OPTION_PROVIDERS)) {
+                throw new SyncClientException('Data providers not configured');
             }
-            $this->providers[$type] = new $this->availableProviders[$type];
+
+            if (!array_key_exists($type, $this->getOption(self::OPTION_PROVIDERS))) {
+                throw new SyncClientException('Data provider ' . $type . ' is not defined');
+            }
+
+            $className = $this->getOption(self::OPTION_PROVIDERS)[$type];
+            if (!class_exists($className)) {
+                throw new SyncClientException('Class '.$className. ' not found');
+            }
+
+            $class = new ReflectionClass($className);
+            if (!$class->implementsInterface(SyncClientDataProviderInterface::class)) {
+                throw new SyncClientException('Class '.$className. ' has to implement interface '.SyncClientDataProviderInterface::class);
+            }
+
+            $this->providers[$type] = new $className;
             $this->providers[$type]->setServiceLocator($this->getServiceLocator());
         }
         return $this->providers[$type];

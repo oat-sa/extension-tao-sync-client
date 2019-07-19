@@ -21,13 +21,39 @@ namespace oat\taoSyncClient\model\dataProvider\providers;
 
 use oat\oatbox\service\ConfigurableService;
 use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderInterface;
+use oat\taoSyncClient\model\syncQueue\SyncQueueInterface;
 
 class TestSessionDataProviderService extends ConfigurableService implements SyncClientDataProviderInterface
 {
 
-    public function getData($synchronizableIds = [])
+    public function getData($deliveryExecutionIds = [])
     {
-        //something terrible goes here
-        return [];
+        return $this->getValidDeliveryExecutions($deliveryExecutionIds);
+    }
+
+    /**
+     * Preconditions to have possibility to sync test sessions
+     * @param array $deliveryExecutionIds
+     * @return array
+     */
+    private function getValidDeliveryExecutions($deliveryExecutionIds = [])
+    {
+        $deliveryExecutionIds = array_unique($deliveryExecutionIds);
+        foreach ($deliveryExecutionIds as $key => $deliveryExecutionId) {
+            // all delivery logs need to be synchronized before test session sending
+            if (!$this->getSyncQueueService()->isDeliveryLogSynchronized($deliveryExecutionId)) {
+                unset($deliveryExecutionIds[$key]);
+            }
+        }
+
+        return $deliveryExecutionIds;
+    }
+
+    /**
+     * @return array|object|SyncQueueInterface
+     */
+    private function getSyncQueueService()
+    {
+        return $this->getServiceLocator()->get(SyncQueueInterface::SERVICE_ID);
     }
 }

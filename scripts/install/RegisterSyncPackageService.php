@@ -53,7 +53,6 @@ class RegisterSyncPackageService extends InstallAction
             $syncPackageService = new SyncPackageService([
                 SyncPackageService::OPTION_MIGRATION => RdsMigrationService::class,
                 SyncPackageService::OPTION_MIGRATION_PARAMS => ['default'],
-                SyncPackageService::OPTION_DATA_PROVIDER => SyncClientDataProviderInterface::class,
                 SyncPackageService::OPTION_STORAGE => SyncPackageFileSystemStorageService::class,
             ]);
             $syncPackageService->setServiceLocator($this->getServiceLocator());

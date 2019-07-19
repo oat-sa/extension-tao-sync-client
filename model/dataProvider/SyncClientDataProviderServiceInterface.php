@@ -16,36 +16,21 @@
  *
  * Copyright (c) 2019  (original work) Open Assessment Technologies SA;
  *
- * @author Oleksandr Zagovorychev <zagovorichev@1pt.com>
+ * @author Oleksandr Zagovorychev <zagovorichev@gmail.com>
  */
 
-namespace oat\taoSyncClient\model\syncPackage\storage;
+namespace oat\taoSyncClient\model\dataProvider;
 
 
-use Zend\ServiceManager\ServiceLocatorAwareInterface;
-
-interface SyncPackageStorageInterface extends ServiceLocatorAwareInterface
+interface SyncClientDataProviderServiceInterface extends SyncClientDataProviderInterface
 {
-    /**
-     * checks that storage can be used
-     * @return bool
-     */
-    public function isValid();
+    const SERVICE_ID = 'taoSyncClient/SyncClientDataProviderService';
+    const OPTION_PROVIDERS = 'providers';
 
     /**
-     * Create new package
-     * @param array $data
-     * @return string package name
+     * Getting provider from the initialized providers in the $this->getOption(self::OPTION_PROVIDERS)
+     * @param string $type
+     * @return SyncClientDataProviderInterface
      */
-    public function createPackage($data = []);
-
-    /**
-     * @return void
-     */
-    public function createStorage();
-
-    /**
-     * @return string
-     */
-    public function getStorageName();
+    public function getProvider($type = '');
 }

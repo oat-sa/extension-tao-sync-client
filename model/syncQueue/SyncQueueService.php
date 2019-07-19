@@ -23,6 +23,7 @@ namespace oat\taoSyncClient\model\syncQueue;
 
 
 use oat\oatbox\service\ConfigurableService;
+use oat\taoProctoring\model\deliveryLog\DeliveryLog;
 use oat\taoSyncClient\model\syncQueue\exception\SyncClientSyncQueueException;
 use oat\taoSyncClient\model\syncQueue\storage\SyncQueueStorageInterface;
 use ReflectionClass;
@@ -114,5 +115,24 @@ class SyncQueueService extends ConfigurableService implements SyncQueueInterface
     {
         $this->getStorageService()->setMigrationId($migrationId, $queuedTasks);
         return count($queuedTasks); //Not exactly count of updated in db.
+    }
+
+    /**
+     * @param $deliveryExecutionId
+     * @return bool
+     * @throws SyncClientSyncQueueException
+     */
+    public function isDeliveryLogSynchronized($deliveryExecutionId)
+    {
+        $deliveryLogIds = $this->getDeliveryLogService()->get($deliveryExecutionId);
+        return $this->getStorageService()->isSynchronized(static::PARAM_EVENT_TYPE_DELIVERY_LOG, $deliveryLogIds);
+    }
+
+    /**
+     * @return array|object|DeliveryLog
+     */
+    private function getDeliveryLogService()
+    {
+        return $this->getServiceLocator()->get(DeliveryLog::SERVICE_ID);
     }
 }

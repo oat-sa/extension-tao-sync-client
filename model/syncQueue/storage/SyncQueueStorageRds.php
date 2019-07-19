@@ -113,6 +113,22 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
         return 1;
     }
 
+    public function isSynchronized($eventType = '', $synchronizedIds = [])
+    {
+        $query = $this->getQueryBuilder()
+            ->select('*')
+            ->from(self::TABLE_NAME)
+            ->where(self::PARAM_EVENT_TYPE, '=:eventType')
+            ->setParameter('eventType', $eventType)
+            ->where(self::PARAM_SYNCHRONIZABLE_ID, 'IN(:ids)')
+            ->setParameter('ids', $synchronizedIds, Connection::PARAM_STR_ARRAY)
+            ->where(self::PARAM_SYNC_MIGRATION_ID . ' = :syncMigrationId')
+            ->setParameter('syncMigrationId', 0)
+            ->orderBy(self::PARAM_CREATED_AT);
+
+        return count($query->execute()->fetchAll()) === 0;
+    }
+
     /**
      * @return common_persistence_SqlPersistence
      */

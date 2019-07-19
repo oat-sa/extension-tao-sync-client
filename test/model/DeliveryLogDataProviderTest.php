@@ -15,32 +15,28 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  * Copyright (c) 2019  (original work) Open Assessment Technologies SA;
+ *
+ * @author Oleksandr Zagovorychev <zagovorichev@gmail.com>
  */
 
-namespace oat\taoSyncClient\model\dataProvider\providers;
+namespace oat\taoSyncClient\test\model;
 
-use oat\oatbox\service\ConfigurableService;
+
+use oat\generis\test\TestCase;
 use oat\taoProctoring\model\deliveryLog\DeliveryLog;
-use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderInterface;
+use oat\taoSyncClient\model\dataProvider\providers\DeliveryLogDataProviderService;
 
-class DeliveryLogDataProviderService extends ConfigurableService implements SyncClientDataProviderInterface
+class DeliveryLogDataProviderTest extends TestCase
 {
-    /**
-     * @param array $synchronizableIds
-     * @return array
-     */
-    public function getData($synchronizableIds = [])
+    public function testGetData()
     {
-        return $this->getDeliveryLogService()->search(
-                [DeliveryLog::ID => $synchronizableIds],
-                ['shouldDecodeData' => false]);
-    }
-
-    /**
-     * @return array|DeliveryLog
-     */
-    private function getDeliveryLogService()
-    {
-        return $this->getServiceLocator()->get(DeliveryLog::SERVICE_ID);
+        $deliveryLogService = $this->getMock(DeliveryLog::class);
+        $deliveryLogService->method('search')->willReturn(['1234']);
+        $serviceLocator = $this->getServiceLocatorMock([
+            DeliveryLog::SERVICE_ID => $deliveryLogService,
+        ]);
+        $service = new DeliveryLogDataProviderService([]);
+        $service->setServiceLocator($serviceLocator);
+        self::assertSame(['1234'], $service->getData());
     }
 }

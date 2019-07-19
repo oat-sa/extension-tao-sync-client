@@ -36,8 +36,7 @@ interface SyncQueueInterface
     const OPTION_SYNC_QUEUE_STORAGE = 'storage';
     const OPTION_SYNC_QUEUE_STORAGE_PARAMS = 'storage_params';
 
-    const PARAM_EVENT_TYPE_LTI_USER_CREATED = 'lti_user_created';
-    const PARAM_EVENT_TYPE_LTI_USER_UPDATED = 'lti_user_updated';
+    const PARAM_EVENT_TYPE_LTI_USER = 'lti_user';
     const PARAM_EVENT_TYPE_RESULTS = 'results';
     const PARAM_EVENT_TYPE_DELIVERY_LOG = 'delivery_log';
     const PARAM_EVENT_TYPE_TEST_SESSION = 'test_session';
@@ -68,4 +67,12 @@ interface SyncQueueInterface
      * @return int (count of the updated fields)
      */
     public function markAsMigrated($migrationId = 0, $queuedTasks = []);
+
+    /**
+     * Checks that for the provided delivery execution all delivery log data were synchronized
+     * (Example: Test session can't be synchronized without delivery log data)
+     * @param $deliveryExecutionId
+     * @return bool
+     */
+    public function isDeliveryLogSynchronized($deliveryExecutionId);
 }

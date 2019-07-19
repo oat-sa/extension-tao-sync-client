@@ -19,48 +19,53 @@
 
 namespace oat\taoSyncClient\model\dataProvider\providers;
 
+use common_exception_InvalidArgumentType;
+use core_kernel_classes_Resource;
+use oat\generis\model\OntologyAwareTrait;
 use oat\oatbox\service\ConfigurableService;
-use oat\taoEncryption\Service\Lti\LaunchData\EncryptedLtiLaunchDataStorage;
 use oat\taoLti\models\classes\user\LtiUserService;
 use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderInterface;
 
 /**
- * TODO: rewrite without using taoEncryption
  * Class LtiUserDataProviderService
  * @package oat\taoSyncClient\model\dataProvider\providers
  */
 class LtiUserDataProviderService extends ConfigurableService implements SyncClientDataProviderInterface
 {
+    use OntologyAwareTrait;
 
     /**
-     * @param array $synchronizableIds
+     * @param array $usersId
      * @return array
-     * @throws \common_exception_Error
-     * @throws \common_exception_InvalidArgumentType
+     * @throws common_exception_InvalidArgumentType
      */
-    public function getData($synchronizableIds = [])
+    public function getData($usersId = [])
     {
-        /** @var EncryptedLtiLaunchDataStorage $encryptedLtiStorage */
-        $encryptedLtiStorage = $this->getServiceLocator()->get(EncryptedLtiLaunchDataStorage::SERVICE_ID);
-        foreach ($synchronizableIds as $userId) {
-            try {
-                $userResource = new \core_kernel_classes_Resource($userId);
-                $properties = $userResource->getPropertiesValues([
-                    LtiUserService::PROPERTY_USER_LTIKEY,
-                    LtiUserService::PROPERTY_USER_LTICONSUMER
-                ]);
-                $users[] = [
-                    EncryptedLtiLaunchDataStorage::COLUMN_USER_ID    => $properties[LtiUserService::PROPERTY_USER_LTIKEY][0],
-                    EncryptedLtiLaunchDataStorage::COLUMN_CONSUMER   => $properties[LtiUserService::PROPERTY_USER_LTICONSUMER][0],
-                    EncryptedLtiLaunchDataStorage::COLUMN_SERIALIZED => $encryptedLtiStorage->getEncrypted($properties[LtiUserService::PROPERTY_USER_LTIKEY][0]),
-                    'client_user_id'                                 => $userId,
-                ];
-            } catch (\Exception $e) {
-                // no log system described for this.
-                continue;
-            }
+        $usersId = array_unique($usersId);
+        $users = [];
+        foreach ($usersId as $userId) {
+            $user = [];
+            $resource = $this->getResource($userId);
+            /** @var core_kernel_classes_Resource $consumerResource */
+            $properties = $resource->getPropertiesValues([
+                $this->getProperty(LtiUserService::PROPERTY_USER_LTICONSUMER),
+                $this->getProperty(LtiUserService::PROPERTY_USER_LTIKEY),
+            ]);
+            $user['client_user_id'] = $userId;
+            $user['consumer'] = array_key_exists(LtiUserService::PROPERTY_USER_LTICONSUMER, $properties)
+                ? current($properties[LtiUserService::PROPERTY_USER_LTICONSUMER])->getUri()
+                : '';
+            $user['user_id'] = array_key_exists(LtiUserService::PROPERTY_USER_LTIKEY, $properties)
+                ? (string) current($properties[LtiUserService::PROPERTY_USER_LTIKEY])
+                : '';
+            $users[] = $user;
         }
-        return $users ?? [];
+        return $users;
+    }
+
+    public function getLtiUserService()
+    {
+        return $this->getServiceLocator()->get(LtiUserService::SERVICE_ID);
     }
 
 }

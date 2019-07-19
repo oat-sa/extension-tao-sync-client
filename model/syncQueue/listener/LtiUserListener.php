@@ -39,10 +39,7 @@ class LtiUserListener extends AbstractSyncQueueListener
      */
     public static function create(LtiUserCreatedEvent $createdEvent)
     {
-        self::addTask([
-            self::PARAM_USER_ID => $createdEvent->getUserId(),
-            self::PARAM_EVENT => SyncQueueInterface::PARAM_EVENT_TYPE_LTI_USER_CREATED,
-        ]);
+        self::addTask($createdEvent->getUserId());
     }
 
     /**
@@ -51,22 +48,19 @@ class LtiUserListener extends AbstractSyncQueueListener
      */
     public static function update(LtiUserUpdatedEvent $updatedEvent)
     {
-        self::addTask([
-            self::PARAM_USER_ID => $updatedEvent->getUserId(),
-            self::PARAM_EVENT => SyncQueueInterface::PARAM_EVENT_TYPE_LTI_USER_UPDATED,
-        ]);
+        self::addTask($updatedEvent->getUserId());
     }
 
     /**
-     * @param array $params
+     * @param string $userId
      * @throws SyncClientSyncQueueException
      */
-    private static function addTask(array $params)
+    private static function addTask($userId)
     {
         self::getSyncQueueService()->addTask([
-            SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID => $params[self::PARAM_USER_ID],
+            SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID => $userId,
             SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_TYPE => SyncQueueInterface::PARAM_SYNCHRONIZABLE_TYPE_LTI_USER,
-            SyncQueueStorageInterface::PARAM_EVENT_TYPE => $params[self::PARAM_EVENT],
+            SyncQueueStorageInterface::PARAM_EVENT_TYPE => SyncQueueInterface::PARAM_EVENT_TYPE_LTI_USER,
             SyncQueueStorageInterface::PARAM_CREATED_AT => date('Y-m-d H:i:s'),
             SyncQueueStorageInterface::PARAM_UPDATED_AT => date('Y-m-d H:i:s'),
         ]);

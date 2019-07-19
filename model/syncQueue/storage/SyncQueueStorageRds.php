@@ -46,14 +46,24 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
         parent::__construct($options);
     }
 
-    public function getQueued($types = [], $limit = 10000)
+    public function getAggregatedQueued($types = [], $limit = 10000)
     {
+        $select = [
+            'max(' . self::PARAM_ID . ') as ' . self::PARAM_ID,
+            self::PARAM_SYNCHRONIZABLE_ID,
+            self::PARAM_EVENT_TYPE,
+            self::PARAM_SYNCHRONIZABLE_TYPE
+        ];
         $query = $this->getQueryBuilder()
-            ->select('*')
+            ->select($select)
             ->from(self::TABLE_NAME)
-            ->where(self::PARAM_SYNC_MIGRATION_ID . ' = :syncMigrationId')
-            ->setParameter('syncMigrationId', 0)
-            ->orderBy(self::PARAM_CREATED_AT)
+            ->where(self::PARAM_SYNC_MIGRATION_ID . ' = 0 ');
+        if (!empty($types)) {
+            $query->where(self::PARAM_SYNCHRONIZABLE_TYPE . ' IN (:sync_type)')
+                ->setParameter('sync_type', $types, Connection::PARAM_STR_ARRAY);
+        }
+
+        $query->groupBy([self::PARAM_SYNCHRONIZABLE_TYPE, self::PARAM_SYNCHRONIZABLE_ID, self::PARAM_EVENT_TYPE])
             ->setMaxResults($limit);
 
         return $query->execute()->fetchAll();
@@ -85,11 +95,22 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
         return $this->getPersistence()->insert(self::TABLE_NAME, $action);
     }
 
-    public function setMigrationId($id)
+    public function setMigrationId($migrationId, $queuedTasks = [])
     {
-        $sql = 'UPDATE ' . self::TABLE_NAME . ' SET ' . self::PARAM_SYNC_ID . ' = ?, '.self::PARAM_UPDATED_AT.'= ? WHERE ' . self::PARAM_ID . '= ?';
-        $parameters = [1, date('Y-m-d H:i:s'), $id];
-        return $this->getPersistence()->exec($sql, $parameters);
+        foreach ($queuedTasks as $queuedTask) {
+            $qb = $this->getPersistence()->getPlatForm()->getQueryBuilder();
+            $qb->update(static::TABLE_NAME)
+                ->set(static::PARAM_SYNC_MIGRATION_ID, ':migrationId')
+                ->set(static::PARAM_UPDATED_AT, ':date')
+                ->where(static::PARAM_ID . ' <=:id')
+                ->where(static::PARAM_SYNCHRONIZABLE_ID . ' =:syncId')
+                ->setParameter('migrationId', $migrationId)
+                ->setParameter('date', date('Y-m-d H:i:s'))
+                ->setParameter('id', $queuedTask[self::PARAM_ID])
+                ->setParameter('syncId', $queuedTask[self::PARAM_SYNCHRONIZABLE_ID]);
+            $qb->execute();
+        }
+        return 1;
     }
 
     public function isSynchronized($eventType = '', $synchronizedIds = [])
@@ -149,7 +170,7 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
             $table->addIndex([self::PARAM_UPDATED_AT], 'IDX_' . self::TABLE_NAME . '_updated_at');
         } catch (SchemaException $e) {
             $this->dropStorage();
-            common_Logger::i('Database Schema for '.self::TABLE_NAME.' already up to date.');
+            common_Logger::i('Database Schema for ' . self::TABLE_NAME . ' already up to date.');
             return false;
         }
 
@@ -172,7 +193,7 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
         try {
             $schema->dropTable(self::TABLE_NAME);
         } catch (SchemaException $e) {
-            common_Logger::i('Database Schema for '.self::TABLE_NAME.' can\'t be dropped.');
+            common_Logger::i('Database Schema for ' . self::TABLE_NAME . ' can\'t be dropped.');
         }
 
         $queries = $persistence->getPlatform()->getMigrateSchemaSql($fromSchema, $schema);

@@ -49,6 +49,19 @@ class RdsMigrationService extends ConfigurableService implements MigrationInterf
         return $result ? current($result) : [];
     }
 
+    public function getMigrationIdByPackage($packageName)
+    {
+        $query = $this->getQueryBuilder()
+            ->select('*')
+            ->from(self::TABLE_NAME)
+            ->where(self::PARAM_PACKAGE_NAME . ' = :packageName')
+            ->setParameter('packageName', $packageName)
+            ->setMaxResults(1);
+
+        $result = $query->execute()->fetchAll();
+        return $result ? current($result)[self::PARAM_ID] : false;
+    }
+
     /**
      * Returns the QueryBuilder
      *
@@ -71,8 +84,8 @@ class RdsMigrationService extends ConfigurableService implements MigrationInterf
     {
         $result = $this->getPersistence()->insert(self::TABLE_NAME, [
             static::PARAM_PACKAGE_NAME => $packageName,
-            static::PARAM_UPDATED_AT => date('Y-m-d H:i:s'),
-            static::PARAM_CREATED_AT => date('Y-m-d H:i:s'),
+            static::PARAM_UPDATED_AT   => date('Y-m-d H:i:s'),
+            static::PARAM_CREATED_AT   => date('Y-m-d H:i:s'),
         ]);
         return $result === 1;
     }
@@ -124,7 +137,7 @@ class RdsMigrationService extends ConfigurableService implements MigrationInterf
             $table->addIndex([self::PARAM_UPDATED_AT], 'IDX_' . self::TABLE_NAME . '_updated_at');
         } catch (SchemaException $e) {
             $this->dropStorage();
-            common_Logger::i('Database Schema for '.self::TABLE_NAME.' already up to date.');
+            common_Logger::i('Database Schema for ' . self::TABLE_NAME . ' already up to date.');
             return false;
         }
 
@@ -147,7 +160,7 @@ class RdsMigrationService extends ConfigurableService implements MigrationInterf
         try {
             $schema->dropTable(self::TABLE_NAME);
         } catch (SchemaException $e) {
-            common_Logger::i('Database Schema for '.self::TABLE_NAME.' can\'t be dropped.');
+            common_Logger::i('Database Schema for ' . self::TABLE_NAME . ' can\'t be dropped.');
         }
 
         $queries = $persistence->getPlatform()->getMigrateSchemaSql($fromSchema, $schema);

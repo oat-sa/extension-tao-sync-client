@@ -29,7 +29,6 @@ use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderInterface;
 use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderServiceInterface;
 use oat\taoSyncClient\model\syncPackage\migration\MigrationInterface;
 use oat\taoSyncClient\model\syncPackage\storage\SyncPackageStorageInterface;
-use oat\taoSyncClient\model\syncQueue\storage\SyncQueueStorageInterface;
 use oat\taoSyncClient\model\syncQueue\SyncQueueInterface;
 use oat\taoSyncClient\model\syncQueue\SyncQueueService;
 
@@ -90,7 +89,7 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
     {
         if (!$this->migrationService) {
             $migrationClass = $this->getOption(self::OPTION_MIGRATION);
-            $this->migrationService = new $migrationClass;
+            $this->migrationService = new $migrationClass(self::OPTION_MIGRATION_PARAMS);
             $this->migrationService->setServiceLocator($this->getServiceLocator());
         }
         return $this->migrationService;
@@ -109,30 +108,20 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
             $queuedTasks = $this->getSyncQueueService()->getTasks($dataTypes, $this->getOption('limit'));
             $data = $this->getData($queuedTasks);
             $packageFileName = $this->getStorageService()->createPackage($data);
-            // @todo finished here
-            $migrationId = $this->getMigrationService()->add($packageFileName);
+            $this->getMigrationService()->add($packageFileName);
+            $migrationId = $this->getMigrationService()->getMigrationIdByPackage($packageFileName);
             $migratedCount = $this->getSyncQueueService()->markAsMigrated($migrationId, $queuedTasks);
-
             $report->add(common_report_Report::createInfo($this->getReportMessage($migrationId, $migratedCount, $reportCounts)));
         }
         return $report;
     }
 
-    private function increaseTypeCount($reportCounts, $type)
-    {
-        if (!array_key_exists($type, $reportCounts)) {
-            $reportCounts[$type] = 0;
-        }
-        $reportCounts[$type]++;
-        return $reportCounts;
-    }
-
     private function getReportMessage($migrationId, $migratedCount, $reportCounts)
     {
-        $reportMessage = 'Within migration '.(int)$migrationId.' were migrated '. (int)$migratedCount. ' records from the SyncQueue';
+        $reportMessage = 'Within migration ' . (int)$migrationId . ' were migrated ' . (int)$migratedCount . ' records from the SyncQueue';
         $reportMessage .= "\nMigrated types:\n";
         foreach ($reportCounts as $key => $reportCount) {
-            $reportMessage .= $key.': '.(int)$reportCount."\n";
+            $reportMessage .= $key . ': ' . (int)$reportCount . "\n";
         }
         return $reportMessage;
     }

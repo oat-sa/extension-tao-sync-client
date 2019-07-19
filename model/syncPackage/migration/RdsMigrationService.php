@@ -35,6 +35,16 @@ class RdsMigrationService extends ConfigurableService implements MigrationInterf
     const TABLE_NAME = 'sync_client_migrations';
     const OPTION_PERSISTENCE = 'persistence';
 
+    public function __construct($options = array())
+    {
+        // if initialized within other service we need to rewrite config
+        if (!array_key_exists(self::OPTION_PERSISTENCE, $options)
+            && array_key_exists(0, $options) && count($options) === 1) {
+            $options = [self::OPTION_PERSISTENCE => current($options)];
+        }
+        parent::__construct($options);
+    }
+
     public function getMigration($migrationId = 0)
     {
         $query = $this->getQueryBuilder()

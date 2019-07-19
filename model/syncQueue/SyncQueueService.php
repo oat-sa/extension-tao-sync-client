@@ -124,7 +124,10 @@ class SyncQueueService extends ConfigurableService implements SyncQueueInterface
      */
     public function isDeliveryLogSynchronized($deliveryExecutionId)
     {
-        $deliveryLogIds = $this->getDeliveryLogService()->get($deliveryExecutionId);
+        $deliveryLog = $this->getDeliveryLogService()->get($deliveryExecutionId);
+        $deliveryLogIds = array_map(static function ($row) {
+            return $row[DeliveryLog::ID];
+        }, $deliveryLog);
         return $this->getStorageService()->isSynchronized(static::PARAM_EVENT_TYPE_DELIVERY_LOG, $deliveryLogIds);
     }
 

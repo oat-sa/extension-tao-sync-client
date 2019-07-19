@@ -62,7 +62,7 @@ interface SyncQueueStorageInterface
      * @param int $limit
      * @return array
      */
-    public function getAggregatedQueued($dataTypes, $limit);
+    public function getAggregatedQueued(array $dataTypes = [], $limit = 5000);
 
     /**
      * Checks that all synchronizable resources were migrated
@@ -72,4 +72,12 @@ interface SyncQueueStorageInterface
      * @return bool
      */
     public function isSynchronized($eventType = '', $synchronizableIds = []);
+
+    /**
+     * @param int $migrationId
+     * @param array $types
+     * @param int $limit
+     * @return array
+     */
+    public function getMigrationData($migrationId = 0, array $types = [], $limit = 5000);
 }

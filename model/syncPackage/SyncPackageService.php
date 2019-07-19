@@ -27,10 +27,14 @@ use common_report_Report;
 use oat\oatbox\service\ConfigurableService;
 use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderInterface;
 use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderServiceInterface;
+use oat\taoSyncClient\model\exception\SyncClientException;
 use oat\taoSyncClient\model\syncPackage\migration\MigrationInterface;
 use oat\taoSyncClient\model\syncPackage\storage\SyncPackageStorageInterface;
+use oat\taoSyncClient\model\syncQueue\storage\SyncQueueStorageInterface;
 use oat\taoSyncClient\model\syncQueue\SyncQueueInterface;
 use oat\taoSyncClient\model\syncQueue\SyncQueueService;
+use ReflectionClass;
+use ReflectionException;
 
 class SyncPackageService extends ConfigurableService implements SyncPackageInterface
 {
@@ -84,13 +88,29 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
 
     /**
      * @return MigrationInterface
+     * @throws SyncClientException
      */
     public function getMigrationService()
     {
         if (!$this->migrationService) {
             $migrationClass = $this->getOption(self::OPTION_MIGRATION);
-            $this->migrationService = new $migrationClass(self::OPTION_MIGRATION_PARAMS);
-            $this->migrationService->setServiceLocator($this->getServiceLocator());
+
+            $hasStorage = true;
+            try {
+                $reflection = new ReflectionClass($migrationClass);
+                if ($reflection->implementsInterface(MigrationInterface::class)) {
+                    /** @var SyncQueueStorageInterface storageService */
+                    $this->migrationService = new $migrationClass($this->getOption(self::OPTION_MIGRATION_PARAMS));
+                    $this->migrationService->setServiceLocator($this->getServiceLocator());
+                } else {
+                    $hasStorage = false;
+                }
+            } catch (ReflectionException $e) {
+                $hasStorage = false;
+            }
+            if (!$hasStorage) {
+                throw new SyncClientException('taoSyncClient MigrationStorage is not initialized');
+            }
         }
         return $this->migrationService;
     }
@@ -98,31 +118,59 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
     /**
      * @param array $dataTypes
      * @return common_report_Report
+     * @throws SyncClientException
      * @throws common_exception_Error
      */
     public function create($dataTypes = [])
     {
         $report = common_report_Report::createInfo('Package creation started');
         if ($this->getStorageService()->isValid()) {
-            $reportCounts = [];
             $queuedTasks = $this->getSyncQueueService()->getTasks($dataTypes, $this->getOption('limit'));
-            $data = $this->getData($queuedTasks);
-            $packageFileName = $this->getStorageService()->createPackage($data);
-            $this->getMigrationService()->add($packageFileName);
-            $migrationId = $this->getMigrationService()->getMigrationIdByPackage($packageFileName);
-            $migratedCount = $this->getSyncQueueService()->markAsMigrated($migrationId, $queuedTasks);
-            $report->add(common_report_Report::createInfo($this->getReportMessage($migrationId, $migratedCount, $reportCounts)));
+            if (!count($queuedTasks)) {
+                $report->add(common_report_Report::createSuccess('There is no data for migration.'));
+            } else {
+
+                $data = $this->getData($queuedTasks);
+                if (array_key_exists('test_session', $data)) {
+                    $queuedTasks = $this->filterTestSessions($data, $queuedTasks);
+                }
+
+                if (!count($queuedTasks)) {
+                    $report->add(common_report_Report::createSuccess('There is no data for migration.'));
+                } else {
+                    $packageFileName = $this->getStorageService()->createPackage($data);
+                    $this->getMigrationService()->add($packageFileName);
+                    $migrationId = $this->getMigrationService()->getMigrationIdByPackage($packageFileName);
+                    $migratedCount = $this->getSyncQueueService()->markAsMigrated($migrationId, $queuedTasks);
+                    $report->add(common_report_Report::createSuccess($this->getReportMessage($migrationId,
+                        $packageFileName, $migratedCount)));
+                }
+            }
         }
         return $report;
     }
 
-    private function getReportMessage($migrationId, $migratedCount, $reportCounts)
+    /**
+     * Test sessions can be skipped if delivery log was not synchronized
+     * as importing could be done as split to parts, that is possible that not all of
+     * delivery_log records were synchronized (so we do need to wait until all delivery log were migrated or prepared to migration)
+     * @param $data
+     * @param $queuedTasks
+     * @return array
+     */
+    private function filterTestSessions(array $data, array $queuedTasks)
     {
-        $reportMessage = 'Within migration ' . (int)$migrationId . ' were migrated ' . (int)$migratedCount . ' records from the SyncQueue';
-        $reportMessage .= "\nMigrated types:\n";
-        foreach ($reportCounts as $key => $reportCount) {
-            $reportMessage .= $key . ': ' . (int)$reportCount . "\n";
+        foreach ($queuedTasks as $key => $queuedTask) {
+            if ($queuedTask['event_type'] === 'test_session' && !in_array($queuedTask['synchronizable_id'], $data['test_session'], true)) {
+                unset($queuedTasks[$key]);
+            }
         }
+        return $queuedTasks;
+    }
+
+    private function getReportMessage($migrationId, $packageFileName, $migratedCount)
+    {
+        $reportMessage = 'Within migration ' . (int)$migrationId . ' ('.$packageFileName.') were migrated ' . (int)$migratedCount . ' records from the SyncQueue';
         return $reportMessage;
     }
 

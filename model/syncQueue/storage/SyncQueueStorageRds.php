@@ -46,27 +46,40 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
         parent::__construct($options);
     }
 
-    public function getAggregatedQueued($types = [], $limit = 10000)
+    /**
+     * @param int $migrationId - Id when was migrated, 0 - has not been migrated
+     * @param array $types
+     * @param int $limit
+     * @return array|mixed[]
+     */
+    public function getMigrationData($migrationId = 0, array $types = [], $limit = 5000)
     {
-        $select = [
-            'max(' . self::PARAM_ID . ') as ' . self::PARAM_ID,
-            self::PARAM_SYNCHRONIZABLE_ID,
-            self::PARAM_EVENT_TYPE,
-            self::PARAM_SYNCHRONIZABLE_TYPE
-        ];
         $query = $this->getQueryBuilder()
-            ->select($select)
+            ->select([self::PARAM_SYNCHRONIZABLE_ID, self::PARAM_EVENT_TYPE, self::PARAM_SYNC_MIGRATION_ID])
             ->from(self::TABLE_NAME)
-            ->where(self::PARAM_SYNC_MIGRATION_ID . ' = 0 ');
-        if (!empty($types)) {
-            $query->where(self::PARAM_SYNCHRONIZABLE_TYPE . ' IN (:sync_type)')
+            ->andWhere(self::PARAM_SYNC_MIGRATION_ID . ' = :migrationId ')
+            ->setParameter('migrationId', $migrationId);
+
+        if (count($types)) {
+            $query->andWhere(self::PARAM_SYNCHRONIZABLE_TYPE . ' IN (:sync_type)')
                 ->setParameter('sync_type', $types, Connection::PARAM_STR_ARRAY);
         }
 
-        $query->groupBy([self::PARAM_SYNCHRONIZABLE_TYPE, self::PARAM_SYNCHRONIZABLE_ID, self::PARAM_EVENT_TYPE])
+        $query
+            ->groupBy([self::PARAM_SYNCHRONIZABLE_ID, self::PARAM_EVENT_TYPE, self::PARAM_SYNC_MIGRATION_ID])
             ->setMaxResults($limit);
 
         return $query->execute()->fetchAll();
+    }
+
+    /**
+     * @param array $types
+     * @param int $limit
+     * @return array|mixed[]
+     */
+    public function getAggregatedQueued(array $types = [], $limit = 5000)
+    {
+        return $this->getMigrationData(0, $types, $limit);
     }
 
     public function getAll($limit = 10000, $offset = 0)
@@ -102,15 +115,15 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
             $qb->update(static::TABLE_NAME)
                 ->set(static::PARAM_SYNC_MIGRATION_ID, ':migrationId')
                 ->set(static::PARAM_UPDATED_AT, ':date')
-                ->where(static::PARAM_ID . ' <=:id')
-                ->where(static::PARAM_SYNCHRONIZABLE_ID . ' =:syncId')
+                ->andWhere(static::PARAM_SYNCHRONIZABLE_ID . ' =:syncId')
+                ->andWhere(static::PARAM_EVENT_TYPE . ' =:eventType')
                 ->setParameter('migrationId', $migrationId)
                 ->setParameter('date', date('Y-m-d H:i:s'))
-                ->setParameter('id', $queuedTask[self::PARAM_ID])
-                ->setParameter('syncId', $queuedTask[self::PARAM_SYNCHRONIZABLE_ID]);
-            $qb->execute();
+                ->setParameter('syncId', $queuedTask[self::PARAM_SYNCHRONIZABLE_ID])
+                ->setParameter('eventType', $queuedTask[self::PARAM_EVENT_TYPE])
+                ->execute();
         }
-        return 1;
+        return true;
     }
 
     public function isSynchronized($eventType = '', $synchronizedIds = [])
@@ -118,14 +131,13 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
         $query = $this->getQueryBuilder()
             ->select('*')
             ->from(self::TABLE_NAME)
-            ->where(self::PARAM_EVENT_TYPE, '=:eventType')
+            ->andWhere(self::PARAM_EVENT_TYPE.'=:eventType')
+            ->andWhere(self::PARAM_SYNCHRONIZABLE_ID.' IN(:ids)')
+            ->andWhere(self::PARAM_SYNC_MIGRATION_ID . ' = :syncMigrationId')
             ->setParameter('eventType', $eventType)
-            ->where(self::PARAM_SYNCHRONIZABLE_ID, 'IN(:ids)')
             ->setParameter('ids', $synchronizedIds, Connection::PARAM_STR_ARRAY)
-            ->where(self::PARAM_SYNC_MIGRATION_ID . ' = :syncMigrationId')
             ->setParameter('syncMigrationId', 0)
             ->orderBy(self::PARAM_CREATED_AT);
-
         return count($query->execute()->fetchAll()) === 0;
     }
 

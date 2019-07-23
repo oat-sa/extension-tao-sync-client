@@ -75,4 +75,11 @@ interface SyncQueueInterface
      * @return bool
      */
     public function isDeliveryLogSynchronized($deliveryExecutionId);
+
+    /**
+     * Getting all organizations which delivery executions were run from
+     * @param array $deliveryExecutionIds
+     * @return array
+     */
+    public function getOrgIdsByDeliveryExecutions(array $deliveryExecutionIds = []);
 }

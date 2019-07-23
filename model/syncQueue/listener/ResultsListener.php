@@ -45,6 +45,7 @@ class ResultsListener extends AbstractSyncQueueListener
                 SyncQueueStorageInterface::PARAM_EVENT_TYPE => SyncQueueInterface::PARAM_EVENT_TYPE_RESULTS,
                 SyncQueueStorageInterface::PARAM_CREATED_AT => date('Y-m-d H:i:s'),
                 SyncQueueStorageInterface::PARAM_UPDATED_AT => date('Y-m-d H:i:s'),
+                SyncQueueStorageInterface::PARAM_ORG_ID => current(static::getOrgIdsByDeliveryExecutions([$event->getDeliveryExecution()->getIdentifier()])),
             ]);
         }
     }

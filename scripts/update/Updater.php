@@ -30,6 +30,8 @@ use oat\taoSyncClient\model\dataProvider\providers\ResultsDataProviderService;
 use oat\taoSyncClient\model\dataProvider\providers\TestSessionDataProviderService;
 use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderService;
 use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderServiceInterface;
+use oat\taoSyncClient\model\orgProvider\OrgIdProviderInterface;
+use oat\taoSyncClient\model\orgProvider\providers\TestCenterOrgIdService;
 use oat\taoSyncClient\model\syncPackage\migration\RdsMigrationService;
 use oat\taoSyncClient\model\syncPackage\storage\SyncPackageFileSystemStorageService;
 use oat\taoSyncClient\model\syncPackage\SyncPackageService;
@@ -58,6 +60,8 @@ class Updater extends common_ext_ExtensionUpdater
                         SyncQueueInterface::PARAM_EVENT_TYPE_TEST_SESSION => TestSessionDataProviderService::class,
                     ]
                 ]));
+
+            $this->getServiceManager()->register(OrgIdProviderInterface::SERVICE_ID, new TestCenterOrgIdService());
 
             $this->addReport(common_report_Report::createInfo('Create migrations and storage: php index.php \'oat\taoSyncClient\scripts\install\RegisterSyncPackageService\''));
             $this->setVersion('0.2.0');

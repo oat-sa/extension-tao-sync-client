@@ -25,7 +25,6 @@ use common_report_Report;
 use oat\oatbox\extension\InstallAction;
 use oat\oatbox\filesystem\FileSystemService;
 use oat\oatbox\service\ServiceNotFoundException;
-use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderInterface;
 use oat\taoSyncClient\model\syncPackage\migration\MigrationInterface;
 use oat\taoSyncClient\model\syncPackage\migration\RdsMigrationService;
 use oat\taoSyncClient\model\syncPackage\storage\SyncPackageFileSystemStorageService;

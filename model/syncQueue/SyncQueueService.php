@@ -24,6 +24,7 @@ namespace oat\taoSyncClient\model\syncQueue;
 
 use oat\oatbox\service\ConfigurableService;
 use oat\taoProctoring\model\deliveryLog\DeliveryLog;
+use oat\taoSyncClient\model\orgProvider\OrgIdProviderInterface;
 use oat\taoSyncClient\model\syncQueue\exception\SyncClientSyncQueueException;
 use oat\taoSyncClient\model\syncQueue\storage\SyncQueueStorageInterface;
 use ReflectionClass;
@@ -67,6 +68,9 @@ class SyncQueueService extends ConfigurableService implements SyncQueueInterface
         }
         if (!array_key_exists(SyncQueueStorageInterface::PARAM_EVENT_TYPE, $params)) {
             throw new SyncClientSyncQueueException('Event Type is not set');
+        }
+        if (!array_key_exists(SyncQueueStorageInterface::PARAM_ORG_ID, $params)) {
+            throw new SyncClientSyncQueueException('Organization ID is not set');
         }
     }
 
@@ -137,5 +141,16 @@ class SyncQueueService extends ConfigurableService implements SyncQueueInterface
     private function getDeliveryLogService()
     {
         return $this->getServiceLocator()->get(DeliveryLog::SERVICE_ID);
+    }
+
+    public function getOrgIdsByDeliveryExecutions(array $deliveryExecutionIds = [])
+    {
+        $ids = [];
+        foreach ($deliveryExecutionIds as $deliveryExecutionId) {
+            $ids[] = $this->getServiceLocator()
+                ->get(OrgIdProviderInterface::SERVICE_ID)
+                ->getOrgIdByDeliveryExecution($deliveryExecutionId);
+        }
+        return array_unique($ids);
     }
 }

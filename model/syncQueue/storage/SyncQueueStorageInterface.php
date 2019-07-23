@@ -28,6 +28,7 @@ interface SyncQueueStorageInterface
     const PARAM_SYNCHRONIZABLE_ID = 'synchronizable_id';
     const PARAM_SYNCHRONIZABLE_TYPE = 'synchronizable_type';
     const PARAM_EVENT_TYPE = 'event_type';
+    const PARAM_ORG_ID = 'org_id';
     // id from the migrationService
     const PARAM_SYNC_MIGRATION_ID = 'sync_migration_id';
     const PARAM_CREATED_AT = 'created_at';

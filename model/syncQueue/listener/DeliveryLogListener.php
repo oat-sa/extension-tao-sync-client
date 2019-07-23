@@ -22,6 +22,7 @@
 namespace oat\taoSyncClient\model\syncQueue\listener;
 
 
+use oat\taoProctoring\model\deliveryLog\DeliveryLog;
 use oat\taoProctoring\model\deliveryLog\event\DeliveryLogEvent;
 use oat\taoSyncClient\model\syncQueue\exception\SyncClientSyncQueueException;
 use oat\taoSyncClient\model\syncQueue\storage\SyncQueueStorageInterface;
@@ -37,12 +38,27 @@ class DeliveryLogListener extends AbstractSyncQueueListener
      */
     public static function create(DeliveryLogEvent $event)
     {
-        self::getSyncQueueService()->addTask([
-            SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID => $event->getId(),
-            SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_TYPE => SyncQueueService::PARAM_SYNCHRONIZABLE_TYPE_DELIVERY_LOG,
-            SyncQueueStorageInterface::PARAM_EVENT_TYPE => SyncQueueService::PARAM_EVENT_TYPE_DELIVERY_LOG,
-            SyncQueueStorageInterface::PARAM_CREATED_AT => date('Y-m-d H:i:s'),
-            SyncQueueStorageInterface::PARAM_UPDATED_AT => date('Y-m-d H:i:s'),
-        ]);
+        foreach (static::getOrgIds($event->getId()) as $orgId) {
+            self::getSyncQueueService()->addTask([
+                SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID => $event->getId(),
+                SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_TYPE => SyncQueueService::PARAM_SYNCHRONIZABLE_TYPE_DELIVERY_LOG,
+                SyncQueueStorageInterface::PARAM_EVENT_TYPE => SyncQueueService::PARAM_EVENT_TYPE_DELIVERY_LOG,
+                SyncQueueStorageInterface::PARAM_CREATED_AT => date('Y-m-d H:i:s'),
+                SyncQueueStorageInterface::PARAM_UPDATED_AT => date('Y-m-d H:i:s'),
+                SyncQueueStorageInterface::PARAM_ORG_ID => $orgId,
+            ]);
+        }
+    }
+
+    private static function getOrgIds($deliveryLogId = 0)
+    {
+        /** @var DeliveryLog $deliveryLogService */
+        $deliveryLogService = static::getServiceManager()->get(DeliveryLog::SERVICE_ID);
+        $deliveryLog = $deliveryLogService->search([DeliveryLog::ID => $deliveryLogId]);
+        $orgIds = [''];
+        if ($deliveryLog && array_key_exists(DeliveryLog::DELIVERY_EXECUTION_ID, $deliveryLog)) {
+            $orgIds = static::getOrgIdsByDeliveryExecutions([$deliveryLog[DeliveryLog::DELIVERY_EXECUTION_ID]]);
+        }
+        return $orgIds;
     }
 }

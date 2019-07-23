@@ -27,6 +27,12 @@ use oat\oatbox\service\ServiceNotFoundException;
 use oat\taoSyncClient\model\syncQueue\storage\SyncQueueStorageRds;
 use oat\taoSyncClient\model\syncQueue\SyncQueueService;
 
+/**
+ * php index.php 'oat\taoSyncClient\scripts\install\RegisterSyncQueueRds'
+ *
+ * Class RegisterSyncQueueRds
+ * @package oat\taoSyncClient\scripts\install
+ */
 class RegisterSyncQueueRds extends InstallAction
 {
     /**

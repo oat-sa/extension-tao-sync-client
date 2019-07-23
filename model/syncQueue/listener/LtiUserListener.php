@@ -22,6 +22,8 @@
 namespace oat\taoSyncClient\model\syncQueue\listener;
 
 
+use oat\taoDelivery\model\execution\ServiceProxy;
+use oat\taoDelivery\model\execution\StateService;
 use oat\taoLti\models\classes\user\events\LtiUserCreatedEvent;
 use oat\taoLti\models\classes\user\events\LtiUserUpdatedEvent;
 use oat\taoSyncClient\model\syncQueue\exception\SyncClientSyncQueueException;
@@ -57,12 +59,35 @@ class LtiUserListener extends AbstractSyncQueueListener
      */
     private static function addTask($userId)
     {
-        self::getSyncQueueService()->addTask([
-            SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID => $userId,
-            SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_TYPE => SyncQueueInterface::PARAM_SYNCHRONIZABLE_TYPE_LTI_USER,
-            SyncQueueStorageInterface::PARAM_EVENT_TYPE => SyncQueueInterface::PARAM_EVENT_TYPE_LTI_USER,
-            SyncQueueStorageInterface::PARAM_CREATED_AT => date('Y-m-d H:i:s'),
-            SyncQueueStorageInterface::PARAM_UPDATED_AT => date('Y-m-d H:i:s'),
-        ]);
+        foreach (static::getOrgIds($userId()) as $orgId) {
+            self::getSyncQueueService()->addTask([
+                SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID => $userId,
+                SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_TYPE => SyncQueueInterface::PARAM_SYNCHRONIZABLE_TYPE_LTI_USER,
+                SyncQueueStorageInterface::PARAM_EVENT_TYPE => SyncQueueInterface::PARAM_EVENT_TYPE_LTI_USER,
+                SyncQueueStorageInterface::PARAM_CREATED_AT => date('Y-m-d H:i:s'),
+                SyncQueueStorageInterface::PARAM_UPDATED_AT => date('Y-m-d H:i:s'),
+                SyncQueueStorageInterface::PARAM_ORG_ID => $orgId,
+            ]);
+        }
+    }
+
+    private static function getOrgIds($userId = '')
+    {
+        // I need to get all organizations of the user
+        /** @var ServiceProxy $deliveryExecutionService */
+        $deliveryExecutionService = static::getServiceManager()->get(ServiceProxy::SERVICE_ID);
+        $executions = [];
+        foreach (static::getActiveDeliveryExecutionStatuses() as $status) {
+            $executions[] = $deliveryExecutionService->getDeliveryExecutionsByStatus($userId, $status);
+        }
+        $executions = array_merge(...$executions);
+        return static::getOrgIdsByDeliveryExecutions($executions);
+    }
+
+    public static function getActiveDeliveryExecutionStatuses()
+    {
+        /** @var StateService $statesService */
+        $statesService = static::getServiceManager()->get(StateService::SERVICE_ID);
+        return $statesService->getDeliveriesStates();
     }
 }

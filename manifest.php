@@ -21,6 +21,7 @@
 
 use oat\taoSyncClient\scripts\install\RegisterSyncPackageService;
 use oat\taoSyncClient\scripts\install\RegisterSyncQueueRds;
+use oat\taoSyncClient\scripts\install\SetupSyncQueueEventsListener;
 use oat\taoSyncClient\scripts\update\Updater;
 
 return array(
@@ -43,6 +44,7 @@ return array(
         'php' => [
             RegisterSyncQueueRds::class,
             RegisterSyncPackageService::class,
+            SetupSyncQueueEventsListener::class,
         ]
     ),
     'uninstall' => array(

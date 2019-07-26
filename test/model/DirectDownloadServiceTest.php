@@ -27,19 +27,27 @@ use oat\taoSyncClient\model\downloadService\DirectDownloadService;
 
 class DirectDownloadServiceTest extends TestCase
 {
-    public function testDownload()
-    {
+
+    private $service;
+    public function setup(){
         $publishingTest = $this->getMock(PublishingService::class);
         $publishingTest->method('callEnvironment')->willReturn(true);
         $serviceLocator = $this->getServiceLocatorMock([
             PublishingService::SERVICE_ID => $publishingTest,
         ]);
-        $service = new DirectDownloadService([]);
-        $service->setServiceLocator($serviceLocator);
+        $this->service = new DirectDownloadService([]);
+        $this->service->setServiceLocator($serviceLocator);
+    }
+    public function testSuccessDownload()
+    {
         $params = ['url' => 'test', 'method' => 'test', 'filePath' => 'test'];
-        self::assertSame($params, $service->download($params));
+        self::assertSame($params, $this->service->download($params));
+    }
+
+    public function testMissedParamsDownload()
+    {
+        $params = ['url' => 'test'];
         $this->expectException(\common_exception_MissingParameter::class);
-        unset($params['filePath']);
-        $service->download($params);
+        $this->service->download($params);
     }
 }

@@ -34,6 +34,7 @@ use oat\taoSyncClient\model\orgProvider\OrgIdProviderInterface;
 use oat\taoSyncClient\model\orgProvider\providers\TestCenterOrgIdService;
 use oat\taoSyncClient\model\syncPackage\migration\RdsMigrationService;
 use oat\taoSyncClient\model\syncPackage\storage\SyncPackageFileSystemStorageService;
+use oat\taoSyncClient\model\syncPackage\SyncPackageInterface;
 use oat\taoSyncClient\model\syncPackage\SyncPackageService;
 use oat\taoSyncClient\model\syncQueue\SyncQueueInterface;
 
@@ -65,6 +66,18 @@ class Updater extends common_ext_ExtensionUpdater
 
             $this->addReport(common_report_Report::createInfo('Create migrations and storage: php index.php \'oat\taoSyncClient\scripts\install\RegisterSyncPackageService\''));
             $this->setVersion('0.2.0');
+        }
+        if ($this->isVersion('0.2.0')) {
+            $this->getServiceManager()->unregister(SyncPackageInterface::SERVICE_ID);
+            $this->getServiceManager()->register(
+                SyncPackageInterface::SERVICE_ID,
+                new SyncPackageService([
+                    SyncPackageService::OPTION_MIGRATION => new RdsMigrationService([RdsMigrationService::OPTION_PERSISTENCE => 'default']),
+                    SyncPackageService::OPTION_STORAGE   => new SyncPackageFileSystemStorageService(),
+                    SyncPackageService::OPTION_LIMIT     => 1000,
+                ])
+            );
+            $this->setVersion('0.2.1');
         }
     }
 }

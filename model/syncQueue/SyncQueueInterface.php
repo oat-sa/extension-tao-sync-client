@@ -59,7 +59,7 @@ interface SyncQueueInterface
      * @param bool $synchronized - which data we are looking for (by default that weren't synchronized)
      * @return array
      */
-    public function getTasks(array $dataTypes = [], $limit = 0, $synchronized = false);
+    public function getTasks(array $dataTypes = [], $limit = 5000, $synchronized = false);
 
     /**
      * @param int $migrationId

@@ -42,11 +42,17 @@ class GeneratePackage extends ScriptAction
      */
     private $report;
 
+    /**
+     * @return string
+     */
     protected function provideDescription()
     {
         return 'Creating new file with prepared data which have to be sent to the server.';
     }
 
+    /**
+     * @return array
+     */
     protected function provideOptions()
     {
         return [
@@ -89,6 +95,9 @@ class GeneratePackage extends ScriptAction
         ];
     }
 
+    /**
+     * @return array
+     */
     protected function provideUsage()
     {
         return [
@@ -100,6 +109,7 @@ class GeneratePackage extends ScriptAction
 
     /**
      * @return common_report_Report
+     * @throws \oat\taoSyncClient\model\exception\SyncClientException
      * @throws common_exception_Error
      */
     protected function run()
@@ -119,11 +129,17 @@ class GeneratePackage extends ScriptAction
         return $this->getServiceLocator()->get(SyncPackageService::SERVICE_ID);
     }
 
+    /**
+     * @return bool
+     */
     protected function showTime()
     {
         return $this->hasOption('verbose');
     }
 
+    /**
+     * @return array
+     */
     private function getRequiredDataTypes()
     {
         $dataTypes = [

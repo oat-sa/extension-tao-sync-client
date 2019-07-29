@@ -110,7 +110,7 @@ class SyncQueueService extends ConfigurableService implements SyncQueueInterface
      * @return array
      * @throws SyncClientSyncQueueException
      */
-    public function getTasks(array $dataTypes = [], $limit = 0, $synchronized = false)
+    public function getTasks(array $dataTypes = [], $limit = 5000, $synchronized = false)
     {
         return $this->getStorageService()->getAggregatedQueued($dataTypes, $limit);
     }

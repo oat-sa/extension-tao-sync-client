@@ -38,14 +38,23 @@ use ReflectionException;
 
 class SyncPackageService extends ConfigurableService implements SyncPackageInterface
 {
+    /**
+     *  FileStorageService implements SyncPackageStorageInterface
+     */
     const OPTION_STORAGE = 'storage';
+    /**
+     *  MigrationService implements MigrationInterface
+     */
     const OPTION_MIGRATION = 'migration';
-    const OPTION_MIGRATION_PARAMS = 'migration_params';
+    /**
+     *  Data limit per one package.
+     */
+    const OPTION_LIMIT = 'limit';
 
-    const PARAM_LTI_USER = 'lti-user';
-    const PARAM_DELIVERY_LOG = 'delivery-log';
+    const PARAM_LTI_USER = 'lti_user';
+    const PARAM_DELIVERY_LOG = 'delivery_log';
     const PARAM_RESULTS = 'results';
-    const PARAM_TEST_SESSION = 'test-session';
+    const PARAM_TEST_SESSION = 'test_session';
 
     /**
      * @var SyncPackageStorageInterface
@@ -63,8 +72,7 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
     public function getStorageService()
     {
         if (!$this->storageService) {
-            $storageClass = $this->getOption(self::OPTION_STORAGE);
-            $this->storageService = new $storageClass;
+            $this->storageService = $this->getOption(self::OPTION_STORAGE);
             $this->storageService->setServiceLocator($this->getServiceLocator());
         }
         return $this->storageService;
@@ -93,19 +101,17 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
     public function getMigrationService()
     {
         if (!$this->migrationService) {
-            $migrationClass = $this->getOption(self::OPTION_MIGRATION);
-
             $hasStorage = true;
             try {
-                $reflection = new ReflectionClass($migrationClass);
-                if ($reflection->implementsInterface(MigrationInterface::class)) {
+                $migrationService = $this->getOption(self::OPTION_MIGRATION);
+                if ($migrationService instanceof MigrationInterface) {
                     /** @var SyncQueueStorageInterface storageService */
-                    $this->migrationService = new $migrationClass($this->getOption(self::OPTION_MIGRATION_PARAMS));
+                    $this->migrationService = $migrationService;
                     $this->migrationService->setServiceLocator($this->getServiceLocator());
                 } else {
                     $hasStorage = false;
                 }
-            } catch (ReflectionException $e) {
+            } catch (\Exception $e) {
                 $hasStorage = false;
             }
             if (!$hasStorage) {
@@ -125,26 +131,17 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
     {
         $report = common_report_Report::createInfo('Package creation started');
         if ($this->getStorageService()->isValid()) {
-            $queuedTasks = $this->getSyncQueueService()->getTasks($dataTypes, $this->getOption('limit'));
-            if (!count($queuedTasks)) {
+            $queuedTasks = $this->getSyncQueueService()->getTasks($dataTypes, $this->getOption(self::OPTION_LIMIT));
+            $data = $this->getData($queuedTasks);
+            if (!count($data)) {
                 $report->add(common_report_Report::createSuccess('There is no data for migration.'));
             } else {
-
-                $data = $this->getData($queuedTasks);
-                if (array_key_exists('test_session', $data)) {
-                    $queuedTasks = $this->filterTestSessions($data, $queuedTasks);
-                }
-
-                if (!count($queuedTasks)) {
-                    $report->add(common_report_Report::createSuccess('There is no data for migration.'));
-                } else {
-                    $packageFileName = $this->getStorageService()->createPackage($data);
-                    $this->getMigrationService()->add($packageFileName);
-                    $migrationId = $this->getMigrationService()->getMigrationIdByPackage($packageFileName);
-                    $migratedCount = $this->getSyncQueueService()->markAsMigrated($migrationId, $queuedTasks);
-                    $report->add(common_report_Report::createSuccess($this->getReportMessage($migrationId,
-                        $packageFileName, $migratedCount)));
-                }
+                $packageFileName = $this->getStorageService()->createPackage($data);
+                $this->getMigrationService()->add($packageFileName);
+                $migrationId = $this->getMigrationService()->getMigrationIdByPackage($packageFileName);
+                $migratedCount = $this->getSyncQueueService()->markAsMigrated($migrationId, $queuedTasks);
+                $report->add(common_report_Report::createSuccess($this->getReportMessage($migrationId,
+                    $packageFileName, $migratedCount)));
             }
         }
         return $report;
@@ -181,8 +178,9 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
      */
     private function getData($task)
     {
-        return $this->getDataProviderService()
+        return $task ? $this->getDataProviderService()
             ->setServiceLocator($this->getServiceLocator())
-            ->getData($task);
+            ->getData($task)
+            : [];
     }
 }

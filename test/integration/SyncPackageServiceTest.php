@@ -51,6 +51,8 @@ class SyncPackageServiceTest extends TestCase
         ]);
         $syncQueueService->method('markAsMigrated')->willReturn(150);
         $syncClientDataProviderService = $this->createMock(SyncClientDataProviderServiceInterface::class);
+        $syncClientDataProviderService->method('getData')->willReturn([]);
+        $syncClientDataProviderService->method('setServiceLocator')->willReturn($syncClientDataProviderService);
 
         $serviceLocatorMock = $this->getServiceLocatorMock([
             SyncQueueInterface::SERVICE_ID => $syncQueueService,
@@ -73,6 +75,6 @@ class SyncPackageServiceTest extends TestCase
 
         $report = $syncPackageService->create();
         $json = json_encode($report->JsonSerialize());
-        self::assertSame('{"type":"info","message":"Package creation started","data":null,"children":[]}', $json);
+        self::assertSame('{"type":"info","message":"Package creation started","data":null,"children":[{"type":"success","message":"There is no data for migration.","data":null,"children":[]}]}', $json);
     }
 }

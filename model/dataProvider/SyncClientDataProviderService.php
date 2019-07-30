@@ -26,11 +26,11 @@ use oat\taoSyncClient\model\syncQueue\storage\SyncQueueStorageInterface;
 use ReflectionClass;
 use ReflectionException;
 
-class SyncClientDataProviderService extends ConfigurableService implements SyncClientDataProviderServiceInterface
+class SyncClientDataProviderService extends ConfigurableService implements SyncPackageDataProviderServiceInterface
 {
     /**
      * array of created providers
-     * @var SyncClientDataProviderInterface[]
+     * @var SyncPackageDataProviderInterface[]
      */
     private $providers = [];
 
@@ -72,7 +72,7 @@ class SyncClientDataProviderService extends ConfigurableService implements SyncC
 
     /**
      * @param string $type
-     * @return SyncClientDataProviderInterface
+     * @return SyncPackageDataProviderInterface
      * @throws SyncClientException
      * @throws ReflectionException
      */
@@ -88,11 +88,11 @@ class SyncClientDataProviderService extends ConfigurableService implements SyncC
                 throw new SyncClientException('Data provider ' . $type . ' is not defined');
             }
             /**
-             * @var SyncClientDataProviderInterface
+             * @var SyncPackageDataProviderInterface
              */
             $provider = $this->getOption(self::OPTION_PROVIDERS)[$type];
-            if (!$provider instanceof SyncClientDataProviderInterface) {
-                throw new SyncClientException('Type ' . $type . ' has to implement interface ' . SyncClientDataProviderInterface::class);
+            if (!$provider instanceof SyncPackageDataProviderInterface) {
+                throw new SyncClientException('Type ' . $type . ' has to implement interface ' . SyncPackageDataProviderInterface::class);
             }
             $this->providers[$type] = $provider;
             $this->providers[$type]->setServiceLocator($this->getServiceLocator());

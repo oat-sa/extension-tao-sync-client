@@ -22,7 +22,7 @@
 namespace oat\taoSyncClient\model\syncPackage;
 
 
-use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderInterface;
+use oat\taoSyncClient\model\dataProvider\SyncPackageDataProviderInterface;
 use oat\taoSyncClient\model\syncPackage\migration\MigrationInterface;
 use oat\taoSyncClient\model\syncPackage\storage\SyncPackageStorageInterface;
 use oat\taoSyncClient\model\syncQueue\SyncQueueInterface;
@@ -43,7 +43,7 @@ interface SyncPackageInterface
     public function getSyncQueueService();
 
     /**
-     * @return SyncClientDataProviderInterface
+     * @return SyncPackageDataProviderInterface
      */
     public function getDataProviderService();
 

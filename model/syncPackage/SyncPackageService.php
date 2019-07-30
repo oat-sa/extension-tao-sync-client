@@ -25,8 +25,8 @@ namespace oat\taoSyncClient\model\syncPackage;
 use common_exception_Error;
 use common_report_Report;
 use oat\oatbox\service\ConfigurableService;
-use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderInterface;
-use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderServiceInterface;
+use oat\taoSyncClient\model\dataProvider\SyncPackageDataProviderInterface;
+use oat\taoSyncClient\model\dataProvider\SyncPackageDataProviderServiceInterface;
 use oat\taoSyncClient\model\exception\SyncClientException;
 use oat\taoSyncClient\model\syncPackage\migration\MigrationInterface;
 use oat\taoSyncClient\model\syncPackage\storage\SyncPackageStorageInterface;
@@ -87,11 +87,11 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
     }
 
     /**
-     * @return mixed|SyncClientDataProviderInterface
+     * @return mixed|SyncPackageDataProviderInterface
      */
     public function getDataProviderService()
     {
-        return $this->getServiceLocator()->get(SyncClientDataProviderServiceInterface::SERVICE_ID);
+        return $this->getServiceLocator()->get(SyncPackageDataProviderServiceInterface::SERVICE_ID);
     }
 
     /**

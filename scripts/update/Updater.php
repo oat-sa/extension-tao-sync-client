@@ -29,7 +29,7 @@ use oat\taoSyncClient\model\dataProvider\providers\LtiUserDataProviderService;
 use oat\taoSyncClient\model\dataProvider\providers\ResultsDataProviderService;
 use oat\taoSyncClient\model\dataProvider\providers\TestSessionDataProviderService;
 use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderService;
-use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderServiceInterface;
+use oat\taoSyncClient\model\dataProvider\SyncPackageDataProviderServiceInterface;
 use oat\taoSyncClient\model\orgProvider\OrgIdProviderInterface;
 use oat\taoSyncClient\model\orgProvider\providers\TestCenterOrgIdService;
 use oat\taoSyncClient\model\syncPackage\migration\RdsMigrationService;
@@ -52,9 +52,9 @@ class Updater extends common_ext_ExtensionUpdater
                 ])
             );
 
-            $this->getServiceManager()->register(SyncClientDataProviderServiceInterface::SERVICE_ID,
+            $this->getServiceManager()->register(SyncPackageDataProviderServiceInterface::SERVICE_ID,
                 new SyncClientDataProviderService([
-                    SyncClientDataProviderServiceInterface::OPTION_PROVIDERS => [
+                    SyncPackageDataProviderServiceInterface::OPTION_PROVIDERS => [
                         SyncQueueInterface::PARAM_EVENT_TYPE_DELIVERY_LOG => DeliveryLogDataProviderService::class,
                         SyncQueueInterface::PARAM_EVENT_TYPE_LTI_USER     => LtiUserDataProviderService::class,
                         SyncQueueInterface::PARAM_EVENT_TYPE_RESULTS      => ResultsDataProviderService::class,
@@ -81,7 +81,7 @@ class Updater extends common_ext_ExtensionUpdater
         if ($this->isVersion('0.2.1')) {
             $this->getServiceManager()->unregister(SyncClientDataProviderService::SERVICE_ID);
             $this->getServiceManager()->register(
-                SyncClientDataProviderServiceInterface::SERVICE_ID,
+                SyncPackageDataProviderServiceInterface::SERVICE_ID,
                 new SyncClientDataProviderService([
                     SyncQueueInterface::PARAM_EVENT_TYPE_DELIVERY_LOG => new DeliveryLogDataProviderService(),
                     SyncQueueInterface::PARAM_EVENT_TYPE_LTI_USER     => new LtiUserDataProviderService(),

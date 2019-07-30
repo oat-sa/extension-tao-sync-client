@@ -27,7 +27,7 @@ use oat\taoDelivery\model\execution\ServiceProxy;
 use oat\taoDeliveryRdf\helper\DetectTestAndItemIdentifiersHelper;
 use oat\taoResultServer\models\classes\ResultManagement;
 use oat\taoResultServer\models\classes\ResultServerService;
-use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderInterface;
+use oat\taoSyncClient\model\dataProvider\SyncPackageDataProviderInterface;
 use taoResultServer_models_classes_ReadableResultStorage;
 use taoResultServer_models_classes_WritableResultStorage;
 
@@ -35,7 +35,7 @@ use taoResultServer_models_classes_WritableResultStorage;
  * Class ResultDataProviderService
  * @package oat\taoSyncClient\model\dataProvider\providers
  */
-class ResultsDataProviderService extends ConfigurableService implements SyncClientDataProviderInterface
+class ResultsDataProviderService extends ConfigurableService implements SyncPackageDataProviderInterface
 {
     /**
      * @param array $deliveryExecutionIds

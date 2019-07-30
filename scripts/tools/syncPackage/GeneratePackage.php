@@ -28,7 +28,7 @@ use oat\oatbox\extension\script\ScriptAction;
 use oat\taoSyncClient\model\syncPackage\SyncPackageService;
 
 /**
- * php index.php 'oat\taoSyncClient\scripts\tools\syncPackage\GeneratePackage'
+ * php index.php 'oat\taoSyncClient\scripts\tools\syncPackage\GeneratePackage' -a
  *
  * Class GeneratePackage
  * @package oat\taoSyncClient\scripts\tools\syncPackage

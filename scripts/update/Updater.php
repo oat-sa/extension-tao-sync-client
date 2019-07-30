@@ -43,32 +43,16 @@ class Updater extends common_ext_ExtensionUpdater
     public function update($initialVersion)
     {
         if ($this->isVersion('0.1.0')) {
-            $this->getServiceManager()->register(
-                SyncPackageService::SERVICE_ID,
-                new SyncPackageService([
-                    SyncPackageService::OPTION_MIGRATION => RdsMigrationService::class,
-                    SyncPackageService::OPTION_MIGRATION_PARAMS => ['default'],
-                    SyncPackageService::OPTION_STORAGE => SyncPackageFileSystemStorageService::class,
-                ])
-            );
-
             $this->getServiceManager()->register(SyncPackageDataProviderServiceInterface::SERVICE_ID,
                 new SyncClientDataProviderService([
                     SyncPackageDataProviderServiceInterface::OPTION_PROVIDERS => [
-                        SyncQueueInterface::PARAM_EVENT_TYPE_DELIVERY_LOG => DeliveryLogDataProviderService::class,
-                        SyncQueueInterface::PARAM_EVENT_TYPE_LTI_USER     => LtiUserDataProviderService::class,
-                        SyncQueueInterface::PARAM_EVENT_TYPE_RESULTS      => ResultsDataProviderService::class,
-                        SyncQueueInterface::PARAM_EVENT_TYPE_TEST_SESSION => TestSessionDataProviderService::class,
+                        SyncQueueInterface::PARAM_EVENT_TYPE_DELIVERY_LOG => new DeliveryLogDataProviderService(),
+                        SyncQueueInterface::PARAM_EVENT_TYPE_LTI_USER     => new LtiUserDataProviderService(),
+                        SyncQueueInterface::PARAM_EVENT_TYPE_RESULTS      => new ResultsDataProviderService(),
+                        SyncQueueInterface::PARAM_EVENT_TYPE_TEST_SESSION => new TestSessionDataProviderService(),
                     ]
                 ]));
-
             $this->getServiceManager()->register(OrgIdProviderInterface::SERVICE_ID, new TestCenterOrgIdService());
-
-            $this->addReport(common_report_Report::createInfo('Create migrations and storage: php index.php \'oat\taoSyncClient\scripts\install\RegisterSyncPackageService\''));
-            $this->setVersion('0.2.0');
-        }
-        if ($this->isVersion('0.2.0')) {
-            $this->getServiceManager()->unregister(SyncPackageInterface::SERVICE_ID);
             $this->getServiceManager()->register(
                 SyncPackageInterface::SERVICE_ID,
                 new SyncPackageService([
@@ -76,20 +60,8 @@ class Updater extends common_ext_ExtensionUpdater
                     SyncPackageService::OPTION_STORAGE   => new SyncPackageFileSystemStorageService(),
                 ])
             );
-            $this->setVersion('0.2.1');
-        }
-        if ($this->isVersion('0.2.1')) {
-            $this->getServiceManager()->unregister(SyncClientDataProviderService::SERVICE_ID);
-            $this->getServiceManager()->register(
-                SyncPackageDataProviderServiceInterface::SERVICE_ID,
-                new SyncClientDataProviderService([
-                    SyncQueueInterface::PARAM_EVENT_TYPE_DELIVERY_LOG => new DeliveryLogDataProviderService(),
-                    SyncQueueInterface::PARAM_EVENT_TYPE_LTI_USER     => new LtiUserDataProviderService(),
-                    SyncQueueInterface::PARAM_EVENT_TYPE_RESULTS      => new ResultsDataProviderService(),
-                    SyncQueueInterface::PARAM_EVENT_TYPE_TEST_SESSION => new TestSessionDataProviderService(),
-                ])
-            );
-            $this->setVersion('0.2.2');
+            $this->addReport(common_report_Report::createInfo('Create migrations and storage: php index.php \'oat\taoSyncClient\scripts\install\RegisterSyncPackageService\''));
+            $this->setVersion('0.2.0');
         }
     }
 }

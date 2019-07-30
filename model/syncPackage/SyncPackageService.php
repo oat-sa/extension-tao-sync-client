@@ -49,12 +49,12 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
     /**
      *  Data limit per one package.
      */
-    const OPTION_LIMIT = 'limit';
 
     const PARAM_LTI_USER = 'lti_user';
     const PARAM_DELIVERY_LOG = 'delivery_log';
     const PARAM_RESULTS = 'results';
     const PARAM_TEST_SESSION = 'test_session';
+    const PARAM_LIMIT = 'limit';
 
     /**
      * @var SyncPackageStorageInterface
@@ -123,15 +123,16 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
 
     /**
      * @param array $dataTypes
+     * @param integer $limit
      * @return common_report_Report
      * @throws SyncClientException
      * @throws common_exception_Error
      */
-    public function create($dataTypes = [])
+    public function create($dataTypes = [], $limit = 0)
     {
         $report = common_report_Report::createInfo('Package creation started');
         if ($this->getStorageService()->isValid()) {
-            $queuedTasks = $this->getSyncQueueService()->getTasks($dataTypes, $this->getOption(self::OPTION_LIMIT));
+            $queuedTasks = $this->getSyncQueueService()->getTasks($dataTypes, $limit);
             $data = $this->getData($queuedTasks);
             if (!count($data)) {
                 $report->add(common_report_Report::createSuccess('There is no data for migration.'));

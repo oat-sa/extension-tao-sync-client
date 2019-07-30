@@ -7,5 +7,4 @@ use oat\taoSyncClient\model\syncPackage\SyncPackageService;
 return new SyncPackageService([
     SyncPackageService::OPTION_MIGRATION => new RdsMigrationService([RdsMigrationService::OPTION_PERSISTENCE => 'default']),
     SyncPackageService::OPTION_STORAGE   => new SyncPackageFileSystemStorageService(),
-    SyncPackageService::OPTION_LIMIT     => 1000,
 ]);

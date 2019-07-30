@@ -57,7 +57,7 @@ class SyncClientDataProviderServiceTest extends TestCase
     {
         $providerService = new SyncClientDataProviderService([
             SyncClientDataProviderService::OPTION_PROVIDERS => [
-                'typeName' => Provider::class,
+                'typeName' => new Provider(),
             ]
         ]);
 
@@ -126,7 +126,7 @@ class SyncClientDataProviderServiceTest extends TestCase
     /**
      * @throws ReflectionException
      * @throws SyncClientException
-     * @expectedExceptionMessage Class class::provider not found
+     * @expectedExceptionMessage Type typeName has to implement interface oat\taoSyncClient\model\dataProvider\SyncClientDataProviderInterface
      * @expectedException \oat\taoSyncClient\model\exception\SyncClientException
      */
     public function testGetDataExceptionIncorrectProviderClass()
@@ -147,7 +147,7 @@ class SyncClientDataProviderServiceTest extends TestCase
     /**
      * @throws ReflectionException
      * @throws SyncClientException
-     * @expectedExceptionMessage Class stdClass has to implement interface oat\taoSyncClient\model\dataProvider\SyncClientDataProviderInterface
+     * @expectedExceptionMessage Type typeName has to implement interface oat\taoSyncClient\model\dataProvider\SyncClientDataProviderInterface
      * @expectedException \oat\taoSyncClient\model\exception\SyncClientException
      */
     public function testGetDataExceptionIncorrectProviderInterface()

@@ -69,7 +69,7 @@ class GeneratePackage extends ScriptAction
                 'description' => 'Sync ALL data that was not synchronized',
             ],
             SyncPackageService::PARAM_LTI_USER => [
-                'prefix' => 'l',
+                'prefix' => 'u',
                 'flag' => true,
                 'longPrefix' => SyncPackageService::PARAM_LTI_USER,
                 'description' => 'Sync lti user data',
@@ -91,6 +91,14 @@ class GeneratePackage extends ScriptAction
                 'flag' => true,
                 'longPrefix' => SyncPackageService::PARAM_TEST_SESSION,
                 'description' => 'Sync test sessions',
+            ],
+            SyncPackageService::PARAM_LIMIT => [
+                'prefix'       => 'l',
+                'flag'         => false,
+                'cast'         => 'integer',
+                'longPrefix'   => SyncPackageService::PARAM_LIMIT,
+                'description'  => 'Data limit',
+                'defaultValue' => 5000
             ],
         ];
     }
@@ -115,7 +123,7 @@ class GeneratePackage extends ScriptAction
     protected function run()
     {
         $this->report = common_report_Report::createInfo('Script execution started');
-        $report = $this->getSyncPackageService()->create($this->getRequiredDataTypes());
+        $report = $this->getSyncPackageService()->create($this->getRequiredDataTypes(),$this->getOption(SyncPackageService::PARAM_LIMIT));
         $this->report->add($report);
         $this->report->add(common_report_Report::createSuccess('Done'));
         return $this->report;

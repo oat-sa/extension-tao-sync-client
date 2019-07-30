@@ -87,18 +87,14 @@ class SyncClientDataProviderService extends ConfigurableService implements SyncC
             if (!array_key_exists($type, $this->getOption(self::OPTION_PROVIDERS))) {
                 throw new SyncClientException('Data provider ' . $type . ' is not defined');
             }
-
-            $className = $this->getOption(self::OPTION_PROVIDERS)[$type];
-            if (!class_exists($className)) {
-                throw new SyncClientException('Class '.$className. ' not found');
+            /**
+             * @var SyncClientDataProviderInterface
+             */
+            $provider = $this->getOption(self::OPTION_PROVIDERS)[$type];
+            if (!$provider instanceof SyncClientDataProviderInterface) {
+                throw new SyncClientException('Type ' . $type . ' has to implement interface ' . SyncClientDataProviderInterface::class);
             }
-
-            $class = new ReflectionClass($className);
-            if (!$class->implementsInterface(SyncClientDataProviderInterface::class)) {
-                throw new SyncClientException('Class '.$className. ' has to implement interface '.SyncClientDataProviderInterface::class);
-            }
-
-            $this->providers[$type] = new $className;
+            $this->providers[$type] = $provider;
             $this->providers[$type]->setServiceLocator($this->getServiceLocator());
         }
         return $this->providers[$type];

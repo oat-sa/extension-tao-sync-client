@@ -74,10 +74,22 @@ class Updater extends common_ext_ExtensionUpdater
                 new SyncPackageService([
                     SyncPackageService::OPTION_MIGRATION => new RdsMigrationService([RdsMigrationService::OPTION_PERSISTENCE => 'default']),
                     SyncPackageService::OPTION_STORAGE   => new SyncPackageFileSystemStorageService(),
-                    SyncPackageService::OPTION_LIMIT     => 1000,
                 ])
             );
             $this->setVersion('0.2.1');
+        }
+        if ($this->isVersion('0.2.1')) {
+            $this->getServiceManager()->unregister(SyncClientDataProviderService::SERVICE_ID);
+            $this->getServiceManager()->register(
+                SyncClientDataProviderServiceInterface::SERVICE_ID,
+                new SyncClientDataProviderService([
+                    SyncQueueInterface::PARAM_EVENT_TYPE_DELIVERY_LOG => new DeliveryLogDataProviderService(),
+                    SyncQueueInterface::PARAM_EVENT_TYPE_LTI_USER     => new LtiUserDataProviderService(),
+                    SyncQueueInterface::PARAM_EVENT_TYPE_RESULTS      => new ResultsDataProviderService(),
+                    SyncQueueInterface::PARAM_EVENT_TYPE_TEST_SESSION => new TestSessionDataProviderService(),
+                ])
+            );
+            $this->setVersion('0.2.2');
         }
     }
 }

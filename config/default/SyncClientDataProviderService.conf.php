@@ -9,9 +9,9 @@ use oat\taoSyncClient\model\syncQueue\SyncQueueInterface;
 
 return new SyncClientDataProviderService([
     SyncClientDataProviderService::OPTION_PROVIDERS => [
-        SyncQueueInterface::PARAM_EVENT_TYPE_DELIVERY_LOG => DeliveryLogDataProviderService::class,
-        SyncQueueInterface::PARAM_EVENT_TYPE_LTI_USER     => LtiUserDataProviderService::class,
-        SyncQueueInterface::PARAM_EVENT_TYPE_RESULTS      => ResultsDataProviderService::class,
-        SyncQueueInterface::PARAM_EVENT_TYPE_TEST_SESSION => TestSessionDataProviderService::class,
+        SyncQueueInterface::PARAM_EVENT_TYPE_DELIVERY_LOG => new DeliveryLogDataProviderService(),
+        SyncQueueInterface::PARAM_EVENT_TYPE_LTI_USER     => new LtiUserDataProviderService(),
+        SyncQueueInterface::PARAM_EVENT_TYPE_RESULTS      => new ResultsDataProviderService(),
+        SyncQueueInterface::PARAM_EVENT_TYPE_TEST_SESSION => new TestSessionDataProviderService(),
     ]
 ]);

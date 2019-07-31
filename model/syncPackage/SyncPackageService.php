@@ -165,11 +165,15 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
                 $report->add(common_report_Report::createSuccess('There is no data for migration.'));
             } else {
                 $packageFileName = $this->getStorageService()->createPackage($data);
-                $this->getMigrationService()->add($packageFileName);
-                $migrationId = $this->getMigrationService()->getMigrationIdByPackage($packageFileName);
-                $migratedCount = $this->getSyncQueueService()->markAsMigrated($migrationId, $queuedTasks);
-                $report->add(common_report_Report::createSuccess($this->getReportMessage($migrationId,
-                    $packageFileName, $migratedCount)));
+                if ($packageFileName) {
+                    $this->getMigrationService()->add($packageFileName);
+                    $migrationId = $this->getMigrationService()->getMigrationIdByPackage($packageFileName);
+                    $migratedCount = $this->getSyncQueueService()->markAsMigrated($migrationId, $queuedTasks);
+                    $report->add(common_report_Report::createSuccess($this->getReportMessage($migrationId,
+                        $packageFileName, $migratedCount)));
+                } else {
+                    $report->add(common_report_Report::createFailure('Package file can not be created'));
+                }
             }
         }
         return $report;

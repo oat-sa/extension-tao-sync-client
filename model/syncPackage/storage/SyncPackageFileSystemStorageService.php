@@ -45,7 +45,7 @@ class SyncPackageFileSystemStorageService extends ConfigurableService implements
 
     /**
      * @param array $data
-     * @return bool
+     * @return bool|string
      * @throws FileExistsException
      * @throws common_Exception
      */

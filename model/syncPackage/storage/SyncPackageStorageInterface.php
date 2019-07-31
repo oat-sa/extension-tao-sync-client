@@ -35,7 +35,7 @@ interface SyncPackageStorageInterface extends ServiceLocatorAwareInterface
     /**
      * Create new package
      * @param array $data
-     * @return string package name
+     * @return string|bool package name or false if file can't be created
      */
     public function createPackage($data = []);
 

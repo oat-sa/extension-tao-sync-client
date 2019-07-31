@@ -150,8 +150,12 @@ class GeneratePackage extends ScriptAction
             $report = $this->getSyncPackageService()->create($this->getRequiredDataTypes(),
                 $this->getOption(SyncPackageService::PARAM_LIMIT));
             $this->report->add($report);
+            $childrenMessage = 'There is no data for migration.';
+            if ($report->hasChildren()) {
+                $childrenMessage = current($report->getChildren())->getMessage();
+            }
         } while ($this->hasOption(self::OPTION_MIGRATE_EVERYTHING)
-            && $report->getMessage() !== 'There is no data for migration.');
+            && $childrenMessage !== 'There is no data for migration.');
         $this->report->add(common_report_Report::createSuccess('Done'));
         return $this->report;
     }

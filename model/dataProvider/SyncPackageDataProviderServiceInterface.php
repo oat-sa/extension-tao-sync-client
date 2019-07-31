@@ -26,11 +26,4 @@ interface SyncPackageDataProviderServiceInterface extends SyncPackageDataProvide
 {
     const SERVICE_ID = 'taoSyncClient/SyncClientDataProviderService';
     const OPTION_PROVIDERS = 'providers';
-
-    /**
-     * Getting provider from the initialized providers in the $this->getOption(self::OPTION_PROVIDERS)
-     * @param string $type
-     * @return SyncPackageDataProviderInterface
-     */
-    public function getProvider($type = '');
 }

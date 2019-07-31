@@ -23,8 +23,6 @@ namespace oat\taoSyncClient\model\dataProvider;
 use oat\oatbox\service\ConfigurableService;
 use oat\taoSyncClient\model\exception\SyncClientException;
 use oat\taoSyncClient\model\syncQueue\storage\SyncQueueStorageInterface;
-use ReflectionClass;
-use ReflectionException;
 
 class SyncClientDataProviderService extends ConfigurableService implements SyncPackageDataProviderServiceInterface
 {
@@ -37,7 +35,6 @@ class SyncClientDataProviderService extends ConfigurableService implements SyncP
     /**
      * @param array $tasks
      * @return array
-     * @throws ReflectionException
      * @throws SyncClientException
      */
     public function getData($tasks = [])
@@ -71,12 +68,12 @@ class SyncClientDataProviderService extends ConfigurableService implements SyncP
     }
 
     /**
+     * Getting provider from the initialized providers in the $this->getOption(self::OPTION_PROVIDERS)
      * @param string $type
      * @return SyncPackageDataProviderInterface
      * @throws SyncClientException
-     * @throws ReflectionException
      */
-    public function getProvider($type = '')
+    private function getProvider($type = '')
     {
         if (!array_key_exists($type, $this->providers)) {
 
@@ -94,8 +91,7 @@ class SyncClientDataProviderService extends ConfigurableService implements SyncP
             if (!$provider instanceof SyncPackageDataProviderInterface) {
                 throw new SyncClientException('Type ' . $type . ' has to implement interface ' . SyncPackageDataProviderInterface::class);
             }
-            $this->providers[$type] = $provider;
-            $this->providers[$type]->setServiceLocator($this->getServiceLocator());
+            $this->providers[$type] = $this->propagate($provider);
         }
         return $this->providers[$type];
     }

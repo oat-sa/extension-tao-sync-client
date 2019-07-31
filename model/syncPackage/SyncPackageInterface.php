@@ -22,33 +22,17 @@
 namespace oat\taoSyncClient\model\syncPackage;
 
 
-use oat\taoSyncClient\model\dataProvider\SyncPackageDataProviderInterface;
-use oat\taoSyncClient\model\syncPackage\migration\MigrationInterface;
-use oat\taoSyncClient\model\syncPackage\storage\SyncPackageStorageInterface;
-use oat\taoSyncClient\model\syncQueue\SyncQueueInterface;
+use common_report_Report;
 
 interface SyncPackageInterface
 {
     const SERVICE_ID = 'taoSyncClient/SyncPackageService';
 
     /**
-     * Getting path to the folder with Generated packages for synchronization
-     * @return SyncPackageStorageInterface
+     * Create package with data
+     * @param array $dataTypes
+     * @param int $limit
+     * @return common_report_Report
      */
-    public function getStorageService();
-
-    /**
-     * @return SyncQueueInterface
-     */
-    public function getSyncQueueService();
-
-    /**
-     * @return SyncPackageDataProviderInterface
-     */
-    public function getDataProviderService();
-
-    /**
-     * @return MigrationInterface
-     */
-    public function getMigrationService();
+    public function create($dataTypes = [], $limit = 0);
 }

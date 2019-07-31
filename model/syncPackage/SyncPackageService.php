@@ -30,7 +30,6 @@ use oat\taoSyncClient\model\dataProvider\SyncPackageDataProviderServiceInterface
 use oat\taoSyncClient\model\exception\SyncClientException;
 use oat\taoSyncClient\model\syncPackage\migration\MigrationInterface;
 use oat\taoSyncClient\model\syncPackage\storage\SyncPackageStorageInterface;
-use oat\taoSyncClient\model\syncQueue\storage\SyncQueueStorageInterface;
 use oat\taoSyncClient\model\syncQueue\SyncQueueInterface;
 use oat\taoSyncClient\model\syncQueue\SyncQueueService;
 
@@ -65,13 +64,56 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
     private $migrationService;
 
     /**
+     * @var SyncPackageDataProviderInterface
+     */
+    private $dataProviderService;
+
+    /**
+     * @param array $options
+     * @throws SyncClientException
+     * @throws common_exception_Error
+     */
+    public function setOptions(array $options)
+    {
+        $this->checkOptions($options);
+        parent::setOptions($options);
+    }
+
+    /**
+     * @param $name
+     * @param $value
+     * @throws SyncClientException
+     */
+    public function setOption($name, $value)
+    {
+        $this->checkOptions([$name => $value]);
+        parent::setOption($name, $value);
+    }
+
+    /**
+     * @param array $options
+     * @throws SyncClientException
+     */
+    private function checkOptions(array $options)
+    {
+        if (array_key_exists(self::OPTION_STORAGE, $options)
+            && !($options[self::OPTION_STORAGE] instanceof SyncPackageStorageInterface)) {
+            throw new SyncClientException(self::OPTION_STORAGE . ' parameter has to be instance of SyncPackageStorageInterface');
+        }
+        if (array_key_exists(self::OPTION_MIGRATION, $options)
+            && !($options[self::OPTION_MIGRATION] instanceof MigrationInterface)) {
+            throw new SyncClientException(self::OPTION_MIGRATION . ' parameter has to be instance of MigrationInterface');
+        }
+    }
+
+    /**
+     * Getting path to the folder with Generated packages for synchronization
      * @return mixed|storage\SyncPackageStorageInterface
      */
     public function getStorageService()
     {
         if (!$this->storageService) {
-            $this->storageService = $this->getOption(self::OPTION_STORAGE);
-            $this->storageService->setServiceLocator($this->getServiceLocator());
+            $this->storageService = $this->propagate($this->getOption(self::OPTION_STORAGE));
         }
         return $this->storageService;
     }
@@ -89,32 +131,20 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
      */
     public function getDataProviderService()
     {
-        return $this->getServiceLocator()->get(SyncPackageDataProviderServiceInterface::SERVICE_ID);
+        if (!$this->dataProviderService) {
+            $service = $this->getServiceLocator()->get(SyncPackageDataProviderServiceInterface::SERVICE_ID);
+            $this->dataProviderService = $this->propagate($service);
+        }
+        return $this->dataProviderService;
     }
 
     /**
      * @return MigrationInterface
-     * @throws SyncClientException
      */
     public function getMigrationService()
     {
         if (!$this->migrationService) {
-            $hasStorage = true;
-            try {
-                $migrationService = $this->getOption(self::OPTION_MIGRATION);
-                if ($migrationService instanceof MigrationInterface) {
-                    /** @var SyncQueueStorageInterface storageService */
-                    $this->migrationService = $migrationService;
-                    $this->migrationService->setServiceLocator($this->getServiceLocator());
-                } else {
-                    $hasStorage = false;
-                }
-            } catch (\Exception $e) {
-                $hasStorage = false;
-            }
-            if (!$hasStorage) {
-                throw new SyncClientException('taoSyncClient MigrationStorage is not initialized');
-            }
+            $this->migrationService = $this->propagate($this->getOption(self::OPTION_MIGRATION));
         }
         return $this->migrationService;
     }
@@ -123,7 +153,6 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
      * @param array $dataTypes
      * @param integer $limit
      * @return common_report_Report
-     * @throws SyncClientException
      * @throws common_exception_Error
      */
     public function create($dataTypes = [], $limit = 0)
@@ -159,9 +188,6 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
      */
     private function getData($task)
     {
-        return $task ? $this->getDataProviderService()
-            ->setServiceLocator($this->getServiceLocator())
-            ->getData($task)
-            : [];
+        return $task ? $this->getDataProviderService()->getData($task) : [];
     }
 }

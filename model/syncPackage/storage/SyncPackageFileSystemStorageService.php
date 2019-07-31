@@ -34,6 +34,10 @@ class SyncPackageFileSystemStorageService extends ConfigurableService implements
     const STORAGE_NAME = 'packages';
     const FILE_PREFIX = 'syncPackage';
 
+    /**
+     * Checks that storage can be used
+     * @return bool
+     */
     public function isValid()
     {
         return $this->getStorageDir()->exists();
@@ -84,6 +88,9 @@ class SyncPackageFileSystemStorageService extends ConfigurableService implements
             ->createDir(self::STORAGE_NAME);
     }
 
+    /**
+     * @return string
+     */
     public function getStorageName()
     {
         return static::FILESYSTEM_ID;

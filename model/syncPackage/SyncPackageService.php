@@ -33,8 +33,6 @@ use oat\taoSyncClient\model\syncPackage\storage\SyncPackageStorageInterface;
 use oat\taoSyncClient\model\syncQueue\storage\SyncQueueStorageInterface;
 use oat\taoSyncClient\model\syncQueue\SyncQueueInterface;
 use oat\taoSyncClient\model\syncQueue\SyncQueueService;
-use ReflectionClass;
-use ReflectionException;
 
 class SyncPackageService extends ConfigurableService implements SyncPackageInterface
 {
@@ -146,24 +144,6 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
             }
         }
         return $report;
-    }
-
-    /**
-     * Test sessions can be skipped if delivery log was not synchronized
-     * as importing could be done as split to parts, that is possible that not all of
-     * delivery_log records were synchronized (so we do need to wait until all delivery log were migrated or prepared to migration)
-     * @param $data
-     * @param $queuedTasks
-     * @return array
-     */
-    private function filterTestSessions(array $data, array $queuedTasks)
-    {
-        foreach ($queuedTasks as $key => $queuedTask) {
-            if ($queuedTask['event_type'] === 'test_session' && !in_array($queuedTask['synchronizable_id'], $data['test_session'], true)) {
-                unset($queuedTasks[$key]);
-            }
-        }
-        return $queuedTasks;
     }
 
     private function getReportMessage($migrationId, $packageFileName, $migratedCount)

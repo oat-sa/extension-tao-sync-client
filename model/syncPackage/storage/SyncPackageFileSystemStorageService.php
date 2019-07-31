@@ -47,14 +47,18 @@ class SyncPackageFileSystemStorageService extends ConfigurableService implements
      */
     public function createPackage($data = [])
     {
-        $fileName = self::FILE_PREFIX.'_'.time().'.json';
-        $file = $this->getStorageDir()
-            ->getFile($fileName);
+        $i = 0;
+        do {
+            $fileName = self::FILE_PREFIX . ($i ? '_' . $i . '_' : '') . time() . '.json';
+            $i++;
+            $file = $this->getStorageDir()
+                ->getFile($fileName);
+        } while($file->exists());
         return $file->write(json_encode($data)) ? $fileName : false;
     }
 
     /**
-     * @return FileSystemService
+     * @return FileSystemService|array
      */
     private function getFileSystemService()
     {

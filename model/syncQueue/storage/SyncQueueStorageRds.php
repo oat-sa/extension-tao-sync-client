@@ -135,19 +135,24 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
      * @param array $synchronizedIds
      * @return bool
      */
-    public function isSynchronized($eventType = '', $synchronizedIds = [])
+    public function isSynchronized($eventType, array $synchronizedIds)
     {
-        $query = $this->getQueryBuilder()
-            ->select('*')
-            ->from(self::TABLE_NAME)
-            ->andWhere(self::PARAM_EVENT_TYPE.'=:eventType')
-            ->andWhere(self::PARAM_SYNCHRONIZABLE_ID.' IN(:ids)')
-            ->andWhere(self::PARAM_SYNC_MIGRATION_ID . ' = :syncMigrationId')
-            ->setParameter('eventType', $eventType)
-            ->setParameter('ids', $synchronizedIds, Connection::PARAM_STR_ARRAY)
-            ->setParameter('syncMigrationId', 0)
-            ->orderBy(self::PARAM_CREATED_AT);
-        return count($query->execute()->fetchAll()) === 0;
+        $isSynced = true;
+        if (count($synchronizedIds) ) {
+            $query = $this->getQueryBuilder()
+                ->select('*')
+                ->from(self::TABLE_NAME)
+                ->andWhere(self::PARAM_EVENT_TYPE.'=:eventType')
+                ->andWhere(self::PARAM_SYNCHRONIZABLE_ID.' IN(:ids)')
+                ->andWhere(self::PARAM_SYNC_MIGRATION_ID . ' = :syncMigrationId')
+                ->setParameter('eventType', $eventType)
+                ->setParameter('ids', $synchronizedIds, Connection::PARAM_STR_ARRAY)
+                ->setParameter('syncMigrationId', 0)
+                ->orderBy(self::PARAM_CREATED_AT);
+
+            $isSynced = count($query->execute()->fetchAll()) === 0;
+        }
+        return $isSynced;
     }
 
     /**

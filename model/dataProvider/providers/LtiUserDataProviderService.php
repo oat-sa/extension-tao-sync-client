@@ -63,6 +63,9 @@ class LtiUserDataProviderService extends ConfigurableService implements SyncPack
         return $users;
     }
 
+    /**
+     * @return array|object|LtiUserService
+     */
     public function getLtiUserService()
     {
         return $this->getServiceLocator()->get(LtiUserService::SERVICE_ID);

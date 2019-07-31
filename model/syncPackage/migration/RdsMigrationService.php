@@ -121,7 +121,7 @@ class RdsMigrationService extends ConfigurableService implements MigrationInterf
      * @param $syncId
      * @return mixed
      */
-    public function sync($id, $syncId)
+    public function setSyncId($id, $syncId)
     {
         $qb = $this->getPersistence()->getPlatForm()->getQueryBuilder();
         $qb

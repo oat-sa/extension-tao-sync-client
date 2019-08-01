@@ -53,8 +53,7 @@ class SyncPackageFileSystemStorageService extends ConfigurableService implements
     {
         $i = 0;
         do {
-            $fileName = self::FILE_PREFIX . ($i ? '_' . $i . '_' : '') . time() . '.json';
-            $i++;
+            $fileName = self::FILE_PREFIX .'_'. ++$i .'_'. time() . '.json';
             $file = $this->getStorageDir()
                 ->getFile($fileName);
         } while($file->exists());

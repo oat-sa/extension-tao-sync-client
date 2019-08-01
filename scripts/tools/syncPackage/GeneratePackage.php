@@ -25,7 +25,6 @@ namespace oat\taoSyncClient\scripts\tools\syncPackage;
 use common_exception_Error;
 use common_report_Report;
 use oat\oatbox\extension\script\ScriptAction;
-use oat\taoSyncClient\model\exception\SyncClientException;
 use oat\taoSyncClient\model\syncPackage\SyncPackageService;
 
 /**
@@ -140,22 +139,17 @@ class GeneratePackage extends ScriptAction
 
     /**
      * @return common_report_Report
-     * @throws SyncClientException
      * @throws common_exception_Error
      */
     protected function run()
     {
         $this->report = common_report_Report::createInfo('Script execution started');
+        $packageService = $this->getSyncPackageService();
         do {
-            $report = $this->getSyncPackageService()->create($this->getRequiredDataTypes(),
+            $count = $packageService->create($this->getRequiredDataTypes(),
                 $this->getOption(SyncPackageService::PARAM_LIMIT));
-            $this->report->add($report);
-            $childrenMessage = 'There is no data for migration.';
-            if ($report->hasChildren()) {
-                $childrenMessage = current($report->getChildren())->getMessage();
-            }
-        } while ($this->hasOption(self::OPTION_MIGRATE_EVERYTHING)
-            && $childrenMessage !== 'There is no data for migration.');
+            $this->report->add($packageService->getReport());
+        } while ($count && $this->hasOption(self::OPTION_MIGRATE_EVERYTHING));
         $this->report->add(common_report_Report::createSuccess('Done'));
         return $this->report;
     }

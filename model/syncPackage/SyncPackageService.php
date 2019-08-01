@@ -69,6 +69,12 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
     private $dataProviderService;
 
     /**
+     * Report of the last create operation
+     * @var common_report_Report
+     */
+    private $report;
+
+    /**
      * @param array $options
      * @throws SyncClientException
      * @throws common_exception_Error
@@ -152,31 +158,38 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
     /**
      * @param array $dataTypes
      * @param integer $limit
-     * @return common_report_Report
+     * @return int count of the selected for the package data
      * @throws common_exception_Error
      */
     public function create($dataTypes = [], $limit = 0)
     {
-        $report = common_report_Report::createInfo('Package creation started');
+        $this->report = common_report_Report::createInfo('Package creation started');
+        $dataCount = 0;
         if ($this->getStorageService()->isValid()) {
             $queuedTasks = $this->getSyncQueueService()->getTasks($dataTypes, $limit);
             $data = $this->getData($queuedTasks);
-            if (!count($data)) {
-                $report->add(common_report_Report::createSuccess('There is no data for migration.'));
+            $dataCount = count($data);
+            if (!$dataCount) {
+                $this->report->add(common_report_Report::createSuccess('There is no data for migration.'));
             } else {
                 $packageFileName = $this->getStorageService()->createPackage($data);
                 if ($packageFileName) {
                     $this->getMigrationService()->add($packageFileName);
                     $migrationId = $this->getMigrationService()->getMigrationIdByPackage($packageFileName);
                     $migratedCount = $this->getSyncQueueService()->markAsMigrated($migrationId, $queuedTasks);
-                    $report->add(common_report_Report::createSuccess($this->getReportMessage($migrationId,
+                    $this->report->add(common_report_Report::createSuccess($this->getReportMessage($migrationId,
                         $packageFileName, $migratedCount)));
                 } else {
-                    $report->add(common_report_Report::createFailure('Package file can not be created'));
+                    $this->report->add(common_report_Report::createFailure('Package file can not be created'));
                 }
             }
         }
-        return $report;
+        return $dataCount;
+    }
+
+    public function getReport()
+    {
+        return $this->report;
     }
 
     private function getReportMessage($migrationId, $packageFileName, $migratedCount)

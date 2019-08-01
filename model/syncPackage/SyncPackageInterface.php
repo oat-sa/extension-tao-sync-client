@@ -22,6 +22,8 @@
 namespace oat\taoSyncClient\model\syncPackage;
 
 
+use common_report_Report;
+
 interface SyncPackageInterface
 {
     const SERVICE_ID = 'taoSyncClient/SyncPackageService';
@@ -33,4 +35,10 @@ interface SyncPackageInterface
      * @return int count of the selected for the package data
      */
     public function create($dataTypes = [], $limit = 0);
+
+    /**
+     * Report of the last create operation
+     * @return common_report_Report
+     */
+    public function getReport();
 }

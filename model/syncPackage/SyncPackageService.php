@@ -116,7 +116,7 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
      * Getting path to the folder with Generated packages for synchronization
      * @return mixed|storage\SyncPackageStorageInterface
      */
-    public function getStorageService()
+    private function getStorageService()
     {
         if (!$this->storageService) {
             $this->storageService = $this->propagate($this->getOption(self::OPTION_STORAGE));
@@ -127,7 +127,7 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
     /**
      * @return array|SyncQueueInterface
      */
-    public function getSyncQueueService()
+    private function getSyncQueueService()
     {
         return $this->getServiceLocator()->get(SyncQueueService::SERVICE_ID);
     }
@@ -135,7 +135,7 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
     /**
      * @return mixed|SyncPackageDataProviderInterface
      */
-    public function getDataProviderService()
+    private function getDataProviderService()
     {
         if (!$this->dataProviderService) {
             $service = $this->getServiceLocator()->get(SyncPackageDataProviderServiceInterface::SERVICE_ID);
@@ -147,7 +147,7 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
     /**
      * @return MigrationInterface
      */
-    public function getMigrationService()
+    private function getMigrationService()
     {
         if (!$this->migrationService) {
             $this->migrationService = $this->propagate($this->getOption(self::OPTION_MIGRATION));
@@ -187,6 +187,10 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
         return $dataCount;
     }
 
+    /**
+     * Report of the last create operation
+     * @return common_report_Report
+     */
     public function getReport()
     {
         return $this->report;

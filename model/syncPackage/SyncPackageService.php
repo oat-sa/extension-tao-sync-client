@@ -168,8 +168,12 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
         if ($this->getStorageService()->isValid()) {
             $queuedTasks = $this->getSyncQueueService()->getTasks($dataTypes, $limit);
             $data = $this->getData($queuedTasks);
+            if (array_key_exists('test_session', $data)) {
+                // excluded tasks won't be marked as migrated
+                $queuedTasks = $this->filterTestSessions($data, $queuedTasks);
+            }
             $dataCount = count($data);
-            if (!$dataCount) {
+            if (!$dataCount || !count($queuedTasks)) {
                 $this->report->add(common_report_Report::createSuccess('There is no data for migration.'));
             } else {
                 $packageFileName = $this->getStorageService()->createPackage($data);
@@ -185,6 +189,25 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
             }
         }
         return $dataCount;
+    }
+
+    /**
+     * Test sessions can be skipped if delivery log was not synchronized
+     * as importing could be done as split to parts, that is possible that not all of
+     * delivery_log records were synchronized (so we do need to wait until all delivery log were migrated or prepared to migration)
+     * @param $data
+     * @param $queuedTasks
+     * @return array
+     */
+    private function filterTestSessions(array $data, array $queuedTasks)
+    {
+        foreach ($queuedTasks as $key => $queuedTask) {
+            if ($queuedTask['event_type'] === 'test_session'
+                && !in_array($queuedTask['synchronizable_id'], $data['test_session'], true)) {
+                unset($queuedTasks[$key]);
+            }
+        }
+        return $queuedTasks;
     }
 
     /**

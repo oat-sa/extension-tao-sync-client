@@ -144,6 +144,7 @@ class GeneratePackage extends ScriptAction
     protected function run()
     {
         $this->report = common_report_Report::createInfo('Script execution started');
+        /** @var SyncPackageService */
         $packageService = $this->getSyncPackageService();
         do {
             $count = $packageService->create($this->getRequiredDataTypes(),

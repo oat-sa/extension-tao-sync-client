@@ -15,16 +15,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  * Copyright (c) 2019  (original work) Open Assessment Technologies SA;
- *
- * @author Oleksandr Zagovorychev <zagovorichev@gmail.com>
  */
 
-namespace oat\taoSyncClient\model\syncResults;
+namespace oat\taoSyncClient\model\dataProvider;
 
 
-interface SyncResultsInterface
+use Zend\ServiceManager\ServiceLocatorAwareInterface;
+
+interface SyncPackageDataProviderInterface extends ServiceLocatorAwareInterface
 {
-    const SERVICE_ID = 'taoSyncClient/SyncResultsService';
-
-    const OPTION_STATUS_EXECUTIONS_TO_SYNC = 'statusExecutionsToSync';
+    /**
+     * Returns required data
+     *
+     * @param array $params
+     * @return array
+     */
+    public function getData($params = []);
 }

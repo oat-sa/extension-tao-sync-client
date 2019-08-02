@@ -19,12 +19,17 @@
  * @author Oleksandr Zagovorychev <zagovorichev@gmail.com>
  */
 
-namespace oat\taoSyncClient\model\syncResults;
+namespace oat\taoSyncClient\model\orgProvider;
 
 
-interface SyncResultsInterface
+interface OrgIdProviderInterface
 {
-    const SERVICE_ID = 'taoSyncClient/SyncResultsService';
+    const SERVICE_ID = 'taoSyncClient/OrgIdProvider';
 
-    const OPTION_STATUS_EXECUTIONS_TO_SYNC = 'statusExecutionsToSync';
+    const ORGANISATION_ID_PROPERTY = 'http://www.taotesting.com/ontologies/synchro.rdf#organisationId';
+
+    /**
+     * @param string $deliveryExecutionId
+     */
+    public function getOrgIdByDeliveryExecution($deliveryExecutionId = '');
 }

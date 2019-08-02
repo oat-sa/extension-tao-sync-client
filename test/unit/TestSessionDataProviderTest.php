@@ -19,12 +19,26 @@
  * @author Oleksandr Zagovorychev <zagovorichev@gmail.com>
  */
 
-namespace oat\taoSyncClient\model\syncResults;
+namespace oat\taoSyncClient\test\model;
 
 
-interface SyncResultsInterface
+use oat\generis\test\TestCase;
+use oat\taoSyncClient\model\dataProvider\providers\TestSessionDataProviderService;
+use oat\taoSyncClient\model\syncQueue\SyncQueueInterface;
+
+class TestSessionDataProviderTest extends TestCase
 {
-    const SERVICE_ID = 'taoSyncClient/SyncResultsService';
-
-    const OPTION_STATUS_EXECUTIONS_TO_SYNC = 'statusExecutionsToSync';
+    public function testGetData()
+    {
+        $syncQueueService = $this->getMock(SyncQueueInterface::class);
+        $syncQueueService->method('isDeliveryLogSynchronized')->willReturnCallback(static function($val) {
+            return $val !== 2;
+        });
+        $serviceLocator = $this->getServiceLocatorMock([
+            SyncQueueInterface::SERVICE_ID => $syncQueueService,
+        ]);
+        $service = new TestSessionDataProviderService([]);
+        $service->setServiceLocator($serviceLocator);
+        self::assertSame([0 => 1, 2 => 3], $service->getData([1,2,3]));
+    }
 }

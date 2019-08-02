@@ -27,6 +27,12 @@ use oat\oatbox\service\ServiceNotFoundException;
 use oat\taoSyncClient\model\syncQueue\storage\SyncQueueStorageRds;
 use oat\taoSyncClient\model\syncQueue\SyncQueueService;
 
+/**
+ * php index.php 'oat\taoSyncClient\scripts\install\RegisterSyncQueueRds'
+ *
+ * Class RegisterSyncQueueRds
+ * @package oat\taoSyncClient\scripts\install
+ */
 class RegisterSyncQueueRds extends InstallAction
 {
     /**
@@ -37,20 +43,16 @@ class RegisterSyncQueueRds extends InstallAction
     public function __invoke($params)
     {
         try {
-            $syncQueueService = $this->getServiceManager()->get(SyncQueueService::SERVICE_ID);
+            $syncQueueService = $this->getServiceLocator()->get(SyncQueueService::SERVICE_ID);
         } catch (ServiceNotFoundException $e) {
             $syncQueueService = new SyncQueueService([
-                SyncQueueService::OPTION_SYNC_QUEUE_STORAGE => SyncQueueStorageRds::class,
-                SyncQueueService::OPTION_SYNC_QUEUE_STORAGE_PARAMS => ['default'],
+                SyncQueueService::OPTION_SYNC_QUEUE_STORAGE => new SyncQueueStorageRds([SyncQueueStorageRds::OPTION_PERSISTENCE => 'default']),
             ]);
         }
-
-        $syncQueueStorageClass = $syncQueueService->getOption(SyncQueueService::OPTION_SYNC_QUEUE_STORAGE);
-        $syncQueueStorageParams = $syncQueueService->getOption(SyncQueueService::OPTION_SYNC_QUEUE_STORAGE_PARAMS);
-        /** @var SyncQueueStorageRds $storage */
-        $storage = new $syncQueueStorageClass([SyncQueueStorageRds::OPTION_PERSISTENCE => current($syncQueueStorageParams)]);
-        $storage->setServiceLocator($this->getServiceManager());
-        $storage->createStorage();
+        $syncQueueService
+            ->getOption(SyncQueueService::OPTION_SYNC_QUEUE_STORAGE)
+            ->setServiceLocator($this->getServiceLocator())
+            ->createStorage();
         $this->getServiceManager()->register(SyncQueueService::SERVICE_ID, $syncQueueService);
         return new common_report_Report(common_report_Report::TYPE_SUCCESS, __('SyncClient queue storage successfully created'));
     }

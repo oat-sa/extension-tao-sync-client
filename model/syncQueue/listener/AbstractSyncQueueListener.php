@@ -22,13 +22,15 @@
 namespace oat\taoSyncClient\model\syncQueue\listener;
 
 
+use oat\oatbox\service\ConfigurableService;
 use oat\oatbox\service\ServiceManager;
+use oat\taoSyncClient\model\orgProvider\OrgIdProviderInterface;
 use oat\taoSyncClient\model\syncQueue\SyncQueueInterface;
 
 class AbstractSyncQueueListener
 {
     /**
-     * @return SyncQueueInterface
+     * @return ConfigurableService|SyncQueueInterface
      */
     protected static function getSyncQueueService()
     {
@@ -41,5 +43,29 @@ class AbstractSyncQueueListener
     protected static function getServiceManager()
     {
         return ServiceManager::getServiceManager();
+    }
+
+    /**
+     * @param string[] $deliveryExecutionIds
+     * @return string[]
+     */
+    protected static function getOrgIdsByDeliveryExecutions(array $deliveryExecutionIds = [])
+    {
+        if (is_array($deliveryExecutionIds) && count($deliveryExecutionIds)) {
+            $ids = [];
+            foreach ($deliveryExecutionIds as $deliveryExecutionId) {
+                $ids[] = static::getServiceManager()
+                    ->get(OrgIdProviderInterface::SERVICE_ID)
+                    ->getOrgIdByDeliveryExecution($deliveryExecutionId);
+            }
+            $orgIds = array_unique($ids);
+        }
+
+        // default is empty string to store
+        if (!isset($orgIds) || !count($orgIds)) {
+            $orgIds = [''];
+        }
+
+        return $orgIds;
     }
 }

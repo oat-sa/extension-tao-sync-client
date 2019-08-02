@@ -31,28 +31,18 @@ use oat\taoSyncClient\model\syncQueue\exception\SyncClientSyncQueueException;
  */
 interface SyncQueueInterface
 {
-    const SERVICE_ID = 'taoSyncClient/syncQueueService';
+    const SERVICE_ID = 'taoSyncClient/SyncQueueService';
 
     const OPTION_SYNC_QUEUE_STORAGE = 'storage';
-    const OPTION_SYNC_QUEUE_STORAGE_PARAMS = 'storage_params';
 
-    const PARAM_EVENT_TYPE_LTI_USER_CREATED = 'lti_user_created';
-    const PARAM_EVENT_TYPE_LTI_USER_UPDATED = 'lti_user_updated';
+    const PARAM_EVENT_TYPE_LTI_USER = 'lti_user';
     const PARAM_EVENT_TYPE_RESULTS = 'results';
     const PARAM_EVENT_TYPE_DELIVERY_LOG = 'delivery_log';
     const PARAM_EVENT_TYPE_TEST_SESSION = 'test_session';
 
     const PARAM_SYNCHRONIZABLE_TYPE_LTI_USER = 'lti_user';
-    const TYPE_SYNCHRONIZABLE_TYPE_DELIVERY_LOG = 'delivery_log';
+    const PARAM_SYNCHRONIZABLE_TYPE_DELIVERY_LOG = 'delivery_log';
     const PARAM_SYNCHRONIZABLE_TYPE_DELIVERY_EXECUTION = 'delivery_execution';
-
-    /**
-     * Send not synchronized data to server
-     * @param string $serverId - unique server identifier
-     * @param int $limit - (0 - send all not synchronized data)
-     * @return bool
-     */
-    public function send($serverId, $limit = 0);
 
     /**
      * @param array $params
@@ -60,4 +50,28 @@ interface SyncQueueInterface
      * @throws SyncClientSyncQueueException
      */
     public function addTask($params = []);
+
+    /**
+     * List of tasks
+     * @param array $dataTypes - [self::PARAM_SYNCHRONIZABLE_TYPE_]
+     * @param int $limit
+     * @param bool $synchronized - which data we are looking for (by default that weren't synchronized)
+     * @return array
+     */
+    public function getTasks(array $dataTypes = [], $limit = 5000, $synchronized = false);
+
+    /**
+     * @param int $migrationId
+     * @param array $queuedTasks
+     * @return int (count of the updated fields)
+     */
+    public function markAsMigrated($migrationId = 0, $queuedTasks = []);
+
+    /**
+     * Checks that for the provided delivery execution all delivery log data were synchronized
+     * (Example: Test session can't be synchronized without delivery log data)
+     * @param $deliveryExecutionId
+     * @return bool
+     */
+    public function isDeliveryLogSynchronized($deliveryExecutionId);
 }

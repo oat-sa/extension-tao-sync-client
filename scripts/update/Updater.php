@@ -30,6 +30,8 @@ use oat\taoSyncClient\model\dataProvider\providers\ResultsDataProviderService;
 use oat\taoSyncClient\model\dataProvider\providers\TestSessionDataProviderService;
 use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderService;
 use oat\taoSyncClient\model\dataProvider\SyncPackageDataProviderServiceInterface;
+use oat\taoSyncClient\model\downloadService\DirectDownloadService;
+use oat\taoSyncClient\model\downloadService\DownloadServiceInterface;
 use oat\taoSyncClient\model\orgProvider\OrgIdProviderInterface;
 use oat\taoSyncClient\model\orgProvider\providers\TestCenterOrgIdService;
 use oat\taoSyncClient\model\syncPackage\migration\RdsMigrationService;

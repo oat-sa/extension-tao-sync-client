@@ -25,5 +25,9 @@ interface DownloadServiceInterface
 {
     const SERVICE_ID = 'taoSyncClient/downloadService';
 
+    /**
+     * @param $params
+     * @return array
+     */
     public function download($params);
 }

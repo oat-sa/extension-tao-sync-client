@@ -31,11 +31,6 @@ use oat\taoSyncClient\model\downloadService\tasks\DownloadTask;
 class DirectDownloadService extends ConfigurableService
 {
     /**
-     *  Action to get correct environment
-     */
-    const ENV_ACTION = SynchronizeData::class;
-
-    /**
      * Basic curl options for resumable downloading
      */
     const CURL_OPTIONS = [

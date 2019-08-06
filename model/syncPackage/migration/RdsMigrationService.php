@@ -35,6 +35,10 @@ class RdsMigrationService extends ConfigurableService implements MigrationInterf
     const TABLE_NAME = 'sync_client_migrations';
     const OPTION_PERSISTENCE = 'persistence';
 
+    /**
+     * RdsMigrationService constructor.
+     * @param array $options
+     */
     public function __construct($options = array())
     {
         // if initialized within other service we need to rewrite config
@@ -45,6 +49,10 @@ class RdsMigrationService extends ConfigurableService implements MigrationInterf
         parent::__construct($options);
     }
 
+    /**
+     * @param int $migrationId
+     * @return array|mixed
+     */
     public function getMigration($migrationId = 0)
     {
         $query = $this->getQueryBuilder()
@@ -59,6 +67,10 @@ class RdsMigrationService extends ConfigurableService implements MigrationInterf
         return $result ? current($result) : [];
     }
 
+    /**
+     * @param string $packageName
+     * @return bool|int
+     */
     public function getMigrationIdByPackage($packageName)
     {
         $query = $this->getQueryBuilder()
@@ -90,6 +102,10 @@ class RdsMigrationService extends ConfigurableService implements MigrationInterf
         return $this->getMigration();
     }
 
+    /**
+     * @param string $packageName
+     * @return bool
+     */
     public function add($packageName)
     {
         $result = $this->getPersistence()->insert(self::TABLE_NAME, [
@@ -100,7 +116,12 @@ class RdsMigrationService extends ConfigurableService implements MigrationInterf
         return $result === 1;
     }
 
-    public function sync($id, $syncId)
+    /**
+     * @param $id
+     * @param $syncId
+     * @return mixed
+     */
+    public function setSyncId($id, $syncId)
     {
         $qb = $this->getPersistence()->getPlatForm()->getQueryBuilder();
         $qb
@@ -123,6 +144,9 @@ class RdsMigrationService extends ConfigurableService implements MigrationInterf
             ->getPersistenceById($this->getOption(self::OPTION_PERSISTENCE));
     }
 
+    /**
+     * @return bool|void
+     */
     public function createStorage()
     {
         $persistence = $this->getPersistence();
@@ -159,6 +183,9 @@ class RdsMigrationService extends ConfigurableService implements MigrationInterf
         return true;
     }
 
+    /**
+     * @return void
+     */
     public function dropStorage()
     {
         $persistence = $this->getPersistence();

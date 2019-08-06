@@ -23,8 +23,8 @@ namespace oat\taoSyncClient\test\integration;
 
 use common_exception_Error;
 use oat\generis\test\TestCase;
-use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderInterface;
-use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderServiceInterface;
+use oat\taoSyncClient\model\dataProvider\SyncPackageDataProviderInterface;
+use oat\taoSyncClient\model\dataProvider\SyncPackageDataProviderServiceInterface;
 use oat\taoSyncClient\model\syncPackage\migration\MigrationInterface;
 use oat\taoSyncClient\model\syncPackage\storage\SyncPackageStorageInterface;
 use oat\taoSyncClient\model\syncPackage\SyncPackageService;
@@ -50,11 +50,13 @@ class SyncPackageServiceTest extends TestCase
             [SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_TYPE => 4],
         ]);
         $syncQueueService->method('markAsMigrated')->willReturn(150);
-        $syncClientDataProviderService = $this->createMock(SyncClientDataProviderServiceInterface::class);
+        $syncClientDataProviderService = $this->createMock(SyncPackageDataProviderServiceInterface::class);
+        $syncClientDataProviderService->method('getData')->willReturn([]);
+        $syncClientDataProviderService->method('setServiceLocator')->willReturn($syncClientDataProviderService);
 
         $serviceLocatorMock = $this->getServiceLocatorMock([
-            SyncQueueInterface::SERVICE_ID => $syncQueueService,
-            SyncClientDataProviderServiceInterface::SERVICE_ID => $syncClientDataProviderService,
+            SyncQueueInterface::SERVICE_ID                      => $syncQueueService,
+            SyncPackageDataProviderServiceInterface::SERVICE_ID => $syncClientDataProviderService,
         ]);
 
         $syncPackageStorageService = $this->createMock(SyncPackageStorageInterface::class);
@@ -62,7 +64,7 @@ class SyncPackageServiceTest extends TestCase
         $syncPackageStorageService->method('save')->willReturn(101);
         $syncPackageStorageService->method('setServiceLocator')->willReturn($syncPackageStorageService);
 
-        $syncDataProviderService = $this->createMock(SyncClientDataProviderInterface::class);
+        $syncDataProviderService = $this->createMock(SyncPackageDataProviderInterface::class);
         $syncDataProviderService->method('setServiceLocator')->willReturn($syncDataProviderService);
 
         $syncPackageService = new SyncPackageService([
@@ -73,6 +75,6 @@ class SyncPackageServiceTest extends TestCase
 
         $report = $syncPackageService->create();
         $json = json_encode($report->JsonSerialize());
-        self::assertSame('{"type":"info","message":"Package creation started","data":null,"children":[]}', $json);
+        self::assertSame('{"type":"info","message":"Package creation started","data":null,"children":[{"type":"success","message":"There is no data for migration.","data":null,"children":[]}]}', $json);
     }
 }

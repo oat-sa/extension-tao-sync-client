@@ -5,7 +5,6 @@ use oat\taoSyncClient\model\syncPackage\storage\SyncPackageFileSystemStorageServ
 use oat\taoSyncClient\model\syncPackage\SyncPackageService;
 
 return new SyncPackageService([
-    SyncPackageService::OPTION_MIGRATION => RdsMigrationService::class,
-    SyncPackageService::OPTION_MIGRATION_PARAMS => ['default'],
-    SyncPackageService::OPTION_STORAGE => SyncPackageFileSystemStorageService::class,
+    SyncPackageService::OPTION_MIGRATION => new RdsMigrationService([RdsMigrationService::OPTION_PERSISTENCE => 'default']),
+    SyncPackageService::OPTION_STORAGE   => new SyncPackageFileSystemStorageService(),
 ]);

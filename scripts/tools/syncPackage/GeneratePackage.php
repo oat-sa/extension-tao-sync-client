@@ -30,40 +30,68 @@ use oat\taoSyncClient\model\syncPackage\SyncPackageService;
 /**
  * php index.php 'oat\taoSyncClient\scripts\tools\syncPackage\GeneratePackage'
  *
+ * Parameters Example:
+ *  `-l 1` - only 1 queued synchronization
+ *
  * Class GeneratePackage
  * @package oat\taoSyncClient\scripts\tools\syncPackage
  */
 class GeneratePackage extends ScriptAction
 {
-    const OPTION_ALL = 'all';
+    /**
+     * All data types have to be synchronized
+     */
+    const OPTION_ALL_TYPES = 'all-types';
+
+    /**
+     * Endless migrate process - it will create as many packages as needed to migrate everything
+     */
+    const OPTION_MIGRATE_EVERYTHING = 'migrate-everything';
+
+    /**
+     * More details about the process
+     */
+    const OPTION_VERBOSE = 'verbose';
 
     /**
      * @var common_report_Report
      */
     private $report;
 
+    /**
+     * @return string
+     */
     protected function provideDescription()
     {
         return 'Creating new file with prepared data which have to be sent to the server.';
     }
 
+    /**
+     * @return array
+     */
     protected function provideOptions()
     {
         return [
-            'verbose' => [
+            self::OPTION_VERBOSE => [
                 'prefix' => 'v',
                 'flag' => true,
-                'longPrefix' => 'verbose',
-                'description' => 'Force script to be more details',
+                'longPrefix' => self::OPTION_VERBOSE,
+                'description' => 'Force script to see more details',
             ],
-            self::OPTION_ALL => [
+            self::OPTION_MIGRATE_EVERYTHING => [
+                'prefix' => 'e',
+                'flag' => true,
+                'longPrefix' => self::OPTION_MIGRATE_EVERYTHING,
+                'description' => 'Migrate as many packages as needed to synchronize everything'
+            ],
+            self::OPTION_ALL_TYPES => [
                 'prefix' => 'a',
                 'flag' => true,
-                'longPrefix' => self::OPTION_ALL,
-                'description' => 'Sync ALL data that was not synchronized',
+                'longPrefix' => self::OPTION_ALL_TYPES,
+                'description' => 'Sync ALL data types that was not synchronized',
             ],
             SyncPackageService::PARAM_LTI_USER => [
-                'prefix' => 'l',
+                'prefix' => 'u',
                 'flag' => true,
                 'longPrefix' => SyncPackageService::PARAM_LTI_USER,
                 'description' => 'Sync lti user data',
@@ -81,14 +109,25 @@ class GeneratePackage extends ScriptAction
                 'description' => 'Sync results',
             ],
             SyncPackageService::PARAM_TEST_SESSION => [
-                'prefix' => 'r',
+                'prefix' => 's',
                 'flag' => true,
                 'longPrefix' => SyncPackageService::PARAM_TEST_SESSION,
                 'description' => 'Sync test sessions',
             ],
+            SyncPackageService::PARAM_LIMIT => [
+                'prefix'       => 'l',
+                'flag'         => false,
+                'cast'         => 'integer',
+                'longPrefix'   => SyncPackageService::PARAM_LIMIT,
+                'description'  => 'Limit of the data for one package (it means that only `limit` rows will be taken from the sync queue for the package)',
+                'defaultValue' => 5000
+            ],
         ];
     }
 
+    /**
+     * @return array
+     */
     protected function provideUsage()
     {
         return [
@@ -105,8 +144,13 @@ class GeneratePackage extends ScriptAction
     protected function run()
     {
         $this->report = common_report_Report::createInfo('Script execution started');
-        $report = $this->getSyncPackageService()->create($this->getRequiredDataTypes());
-        $this->report->add($report);
+        /** @var SyncPackageService */
+        $packageService = $this->getSyncPackageService();
+        do {
+            $count = $packageService->create($this->getRequiredDataTypes(),
+                $this->getOption(SyncPackageService::PARAM_LIMIT));
+            $this->report->add($packageService->getReport());
+        } while ($count && $this->hasOption(self::OPTION_MIGRATE_EVERYTHING));
         $this->report->add(common_report_Report::createSuccess('Done'));
         return $this->report;
     }
@@ -119,11 +163,17 @@ class GeneratePackage extends ScriptAction
         return $this->getServiceLocator()->get(SyncPackageService::SERVICE_ID);
     }
 
+    /**
+     * @return bool
+     */
     protected function showTime()
     {
-        return $this->hasOption('verbose');
+        return $this->hasOption(self::OPTION_VERBOSE);
     }
 
+    /**
+     * @return array
+     */
     private function getRequiredDataTypes()
     {
         $dataTypes = [
@@ -133,7 +183,7 @@ class GeneratePackage extends ScriptAction
             SyncPackageService::PARAM_DELIVERY_LOG,
         ];
 
-        if(!$this->hasOption(self::OPTION_ALL)) {
+        if(!$this->hasOption(self::OPTION_ALL_TYPES)) {
             foreach ($dataTypes as $key => $dataType) {
                 if (!$this->hasOption($dataType)) {
                     unset($dataTypes[$key]);

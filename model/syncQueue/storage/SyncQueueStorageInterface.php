@@ -72,7 +72,7 @@ interface SyncQueueStorageInterface
      * @param array $synchronizableIds
      * @return bool
      */
-    public function isSynchronized($eventType = '', $synchronizableIds = []);
+    public function isSynchronized($eventType, array $synchronizableIds);
 
     /**
      * @param int $migrationId

@@ -60,7 +60,7 @@ interface MigrationInterface extends ServiceLocatorAwareInterface
      * @param $syncId
      * @return mixed
      */
-    public function sync($id, $syncId);
+    public function setSyncId($id, $syncId);
 
     /**
      * Creating storage if needed

@@ -59,7 +59,7 @@ class LtiUserListener extends AbstractSyncQueueListener
      */
     private static function addTask($userId)
     {
-        foreach (static::getOrgIds($userId()) as $orgId) {
+        foreach (static::getOrgIds($userId) as $orgId) {
             self::getSyncQueueService()->addTask([
                 SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID => $userId,
                 SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_TYPE => SyncQueueInterface::PARAM_SYNCHRONIZABLE_TYPE_LTI_USER,
@@ -76,12 +76,14 @@ class LtiUserListener extends AbstractSyncQueueListener
         // I need to get all organizations of the user
         /** @var ServiceProxy $deliveryExecutionService */
         $deliveryExecutionService = static::getServiceManager()->get(ServiceProxy::SERVICE_ID);
-        $executions = [];
+        $executions = $executionsIds = [];
         foreach (static::getActiveDeliveryExecutionStatuses() as $status) {
-            $executions[] = $deliveryExecutionService->getDeliveryExecutionsByStatus($userId, $status);
+            $executions = array_merge(...$deliveryExecutionService->getDeliveryExecutionsByStatus($userId, $status));
         }
-        $executions = array_merge(...$executions);
-        return static::getOrgIdsByDeliveryExecutions($executions);
+        foreach ($executions as $execution) {
+            $executionsIds[] = $execution->getUri();
+        }
+        return static::getOrgIdsByDeliveryExecutions($executionsIds);
     }
 
     public static function getActiveDeliveryExecutionStatuses()

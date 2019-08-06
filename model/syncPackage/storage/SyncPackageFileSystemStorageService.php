@@ -34,6 +34,10 @@ class SyncPackageFileSystemStorageService extends ConfigurableService implements
     const STORAGE_NAME = 'packages';
     const FILE_PREFIX = 'syncPackage';
 
+    /**
+     * Checks that storage can be used
+     * @return bool
+     */
     public function isValid()
     {
         return $this->getStorageDir()->exists();
@@ -41,20 +45,23 @@ class SyncPackageFileSystemStorageService extends ConfigurableService implements
 
     /**
      * @param array $data
-     * @return bool
+     * @return bool|string
      * @throws FileExistsException
      * @throws common_Exception
      */
     public function createPackage($data = [])
     {
-        $fileName = self::FILE_PREFIX.'_'.time().'.json';
-        $file = $this->getStorageDir()
-            ->getFile($fileName);
+        $i = 0;
+        do {
+            $fileName = self::FILE_PREFIX .'_'. ++$i .'_'. time() . '.json';
+            $file = $this->getStorageDir()
+                ->getFile($fileName);
+        } while($file->exists());
         return $file->write(json_encode($data)) ? $fileName : false;
     }
 
     /**
-     * @return FileSystemService
+     * @return FileSystemService|array
      */
     private function getFileSystemService()
     {
@@ -80,6 +87,9 @@ class SyncPackageFileSystemStorageService extends ConfigurableService implements
             ->createDir(self::STORAGE_NAME);
     }
 
+    /**
+     * @return string
+     */
     public function getStorageName()
     {
         return static::FILESYSTEM_ID;

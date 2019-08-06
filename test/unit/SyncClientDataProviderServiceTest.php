@@ -23,7 +23,7 @@ namespace oat\taoSyncClient\test\model;
 
 
 use oat\generis\test\TestCase;
-use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderInterface;
+use oat\taoSyncClient\model\dataProvider\SyncPackageDataProviderInterface;
 use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderService;
 use oat\taoSyncClient\model\exception\SyncClientException;
 use oat\taoSyncClient\model\syncQueue\storage\SyncQueueStorageInterface;
@@ -31,7 +31,7 @@ use ReflectionException;
 use stdClass;
 use Zend\ServiceManager\ServiceLocatorInterface;
 
-class Provider implements SyncClientDataProviderInterface
+class Provider implements SyncPackageDataProviderInterface
 {
     public function getData($data = [])
     {
@@ -57,7 +57,7 @@ class SyncClientDataProviderServiceTest extends TestCase
     {
         $providerService = new SyncClientDataProviderService([
             SyncClientDataProviderService::OPTION_PROVIDERS => [
-                'typeName' => Provider::class,
+                'typeName' => new Provider(),
             ]
         ]);
 
@@ -126,7 +126,7 @@ class SyncClientDataProviderServiceTest extends TestCase
     /**
      * @throws ReflectionException
      * @throws SyncClientException
-     * @expectedExceptionMessage Class class::provider not found
+     * @expectedExceptionMessage Type typeName has to implement interface oat\taoSyncClient\model\dataProvider\SyncPackageDataProviderInterface
      * @expectedException \oat\taoSyncClient\model\exception\SyncClientException
      */
     public function testGetDataExceptionIncorrectProviderClass()
@@ -147,7 +147,7 @@ class SyncClientDataProviderServiceTest extends TestCase
     /**
      * @throws ReflectionException
      * @throws SyncClientException
-     * @expectedExceptionMessage Class stdClass has to implement interface oat\taoSyncClient\model\dataProvider\SyncClientDataProviderInterface
+     * @expectedExceptionMessage Type typeName has to implement interface oat\taoSyncClient\model\dataProvider\SyncPackageDataProviderInterface
      * @expectedException \oat\taoSyncClient\model\exception\SyncClientException
      */
     public function testGetDataExceptionIncorrectProviderInterface()

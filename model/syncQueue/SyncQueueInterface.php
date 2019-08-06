@@ -34,7 +34,6 @@ interface SyncQueueInterface
     const SERVICE_ID = 'taoSyncClient/SyncQueueService';
 
     const OPTION_SYNC_QUEUE_STORAGE = 'storage';
-    const OPTION_SYNC_QUEUE_STORAGE_PARAMS = 'storage_params';
 
     const PARAM_EVENT_TYPE_LTI_USER = 'lti_user';
     const PARAM_EVENT_TYPE_RESULTS = 'results';
@@ -59,7 +58,7 @@ interface SyncQueueInterface
      * @param bool $synchronized - which data we are looking for (by default that weren't synchronized)
      * @return array
      */
-    public function getTasks(array $dataTypes = [], $limit = 0, $synchronized = false);
+    public function getTasks(array $dataTypes = [], $limit = 5000, $synchronized = false);
 
     /**
      * @param int $migrationId
@@ -75,11 +74,4 @@ interface SyncQueueInterface
      * @return bool
      */
     public function isDeliveryLogSynchronized($deliveryExecutionId);
-
-    /**
-     * Getting all organizations which delivery executions were run from
-     * @param array $deliveryExecutionIds
-     * @return array
-     */
-    public function getOrgIdsByDeliveryExecutions(array $deliveryExecutionIds = []);
 }

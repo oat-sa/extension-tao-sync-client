@@ -22,15 +22,8 @@
 namespace oat\taoSyncClient\model\dataProvider;
 
 
-interface SyncClientDataProviderServiceInterface extends SyncClientDataProviderInterface
+interface SyncPackageDataProviderServiceInterface extends SyncPackageDataProviderInterface
 {
     const SERVICE_ID = 'taoSyncClient/SyncClientDataProviderService';
     const OPTION_PROVIDERS = 'providers';
-
-    /**
-     * Getting provider from the initialized providers in the $this->getOption(self::OPTION_PROVIDERS)
-     * @param string $type
-     * @return SyncClientDataProviderInterface
-     */
-    public function getProvider($type = '');
 }

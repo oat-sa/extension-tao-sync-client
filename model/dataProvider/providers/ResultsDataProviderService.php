@@ -27,7 +27,7 @@ use oat\taoDelivery\model\execution\ServiceProxy;
 use oat\taoDeliveryRdf\helper\DetectTestAndItemIdentifiersHelper;
 use oat\taoResultServer\models\classes\ResultManagement;
 use oat\taoResultServer\models\classes\ResultServerService;
-use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderInterface;
+use oat\taoSyncClient\model\dataProvider\SyncPackageDataProviderInterface;
 use taoResultServer_models_classes_ReadableResultStorage;
 use taoResultServer_models_classes_WritableResultStorage;
 
@@ -35,7 +35,7 @@ use taoResultServer_models_classes_WritableResultStorage;
  * Class ResultDataProviderService
  * @package oat\taoSyncClient\model\dataProvider\providers
  */
-class ResultsDataProviderService extends ConfigurableService implements SyncClientDataProviderInterface
+class ResultsDataProviderService extends ConfigurableService implements SyncPackageDataProviderInterface
 {
     /**
      * @param array $deliveryExecutionIds
@@ -62,26 +62,25 @@ class ResultsDataProviderService extends ConfigurableService implements SyncClie
 
     /**
      * Get details of a delivery execution
+     * we don't prevent exceptions, because if something can't be synchronized then we have
+     * data inconsistency and this is an error
      *
      * @param $deliveryExecutionId
      * @return array
+     * @throws common_exception_NotFound
      */
     private function getDeliveryExecutionDetails($deliveryExecutionId)
     {
         /** @var DeliveryExecution $deliveryExecution */
         $deliveryExecution = $this->getServiceProxy()->getDeliveryExecution($deliveryExecutionId);
-        try {
-            return [
-                'identifier' => $deliveryExecution->getIdentifier(),
-                'label'      => $deliveryExecution->getLabel(),
-                'test-taker' => $deliveryExecution->getUserIdentifier(),
-                'starttime'  => $deliveryExecution->getStartTime(),
-                'finishtime' => $deliveryExecution->getFinishTime(),
-                'state'      => $deliveryExecution->getState()->getUri(),
-            ];
-        } catch (common_exception_NotFound $e) {
-            return [];
-        }
+        return [
+            'identifier' => $deliveryExecution->getIdentifier(),
+            'label'      => $deliveryExecution->getLabel(),
+            'test-taker' => $deliveryExecution->getUserIdentifier(),
+            'starttime'  => $deliveryExecution->getStartTime(),
+            'finishtime' => $deliveryExecution->getFinishTime(),
+            'state'      => $deliveryExecution->getState()->getUri(),
+        ];
     }
 
     /**
@@ -114,6 +113,12 @@ class ResultsDataProviderService extends ConfigurableService implements SyncClie
         return $deliveryExecutionVariables;
     }
 
+    /**
+     * Getting a variable from the array with variables
+     * @param string $name
+     * @param array $variables
+     * @return mixed|null
+     */
     private function getVariable($name = '', array $variables = [])
     {
         return array_key_exists($name, $variables) ? $variables[$name] : null;

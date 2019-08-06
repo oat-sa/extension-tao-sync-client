@@ -24,13 +24,13 @@ use core_kernel_classes_Resource;
 use oat\generis\model\OntologyAwareTrait;
 use oat\oatbox\service\ConfigurableService;
 use oat\taoLti\models\classes\user\LtiUserService;
-use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderInterface;
+use oat\taoSyncClient\model\dataProvider\SyncPackageDataProviderInterface;
 
 /**
  * Class LtiUserDataProviderService
  * @package oat\taoSyncClient\model\dataProvider\providers
  */
-class LtiUserDataProviderService extends ConfigurableService implements SyncClientDataProviderInterface
+class LtiUserDataProviderService extends ConfigurableService implements SyncPackageDataProviderInterface
 {
     use OntologyAwareTrait;
 
@@ -63,6 +63,9 @@ class LtiUserDataProviderService extends ConfigurableService implements SyncClie
         return $users;
     }
 
+    /**
+     * @return array|object|LtiUserService
+     */
     public function getLtiUserService()
     {
         return $this->getServiceLocator()->get(LtiUserService::SERVICE_ID);

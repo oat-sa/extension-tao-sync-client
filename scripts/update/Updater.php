@@ -29,13 +29,12 @@ use oat\taoSyncClient\model\dataProvider\providers\LtiUserDataProviderService;
 use oat\taoSyncClient\model\dataProvider\providers\ResultsDataProviderService;
 use oat\taoSyncClient\model\dataProvider\providers\TestSessionDataProviderService;
 use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderService;
-use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderServiceInterface;
-use oat\taoSyncClient\model\downloadService\DirectDownloadService;
-use oat\taoSyncClient\model\downloadService\DownloadServiceInterface;
+use oat\taoSyncClient\model\dataProvider\SyncPackageDataProviderServiceInterface;
 use oat\taoSyncClient\model\orgProvider\OrgIdProviderInterface;
 use oat\taoSyncClient\model\orgProvider\providers\TestCenterOrgIdService;
 use oat\taoSyncClient\model\syncPackage\migration\RdsMigrationService;
 use oat\taoSyncClient\model\syncPackage\storage\SyncPackageFileSystemStorageService;
+use oat\taoSyncClient\model\syncPackage\SyncPackageInterface;
 use oat\taoSyncClient\model\syncPackage\SyncPackageService;
 use oat\taoSyncClient\model\syncQueue\SyncQueueInterface;
 
@@ -44,27 +43,23 @@ class Updater extends common_ext_ExtensionUpdater
     public function update($initialVersion)
     {
         if ($this->isVersion('0.1.0')) {
-            $this->getServiceManager()->register(
-                SyncPackageService::SERVICE_ID,
-                new SyncPackageService([
-                    SyncPackageService::OPTION_MIGRATION => RdsMigrationService::class,
-                    SyncPackageService::OPTION_MIGRATION_PARAMS => ['default'],
-                    SyncPackageService::OPTION_STORAGE => SyncPackageFileSystemStorageService::class,
-                ])
-            );
-
-            $this->getServiceManager()->register(SyncClientDataProviderServiceInterface::SERVICE_ID,
+            $this->getServiceManager()->register(SyncPackageDataProviderServiceInterface::SERVICE_ID,
                 new SyncClientDataProviderService([
-                    SyncClientDataProviderServiceInterface::OPTION_PROVIDERS => [
-                        SyncQueueInterface::PARAM_EVENT_TYPE_DELIVERY_LOG => DeliveryLogDataProviderService::class,
-                        SyncQueueInterface::PARAM_EVENT_TYPE_LTI_USER     => LtiUserDataProviderService::class,
-                        SyncQueueInterface::PARAM_EVENT_TYPE_RESULTS      => ResultsDataProviderService::class,
-                        SyncQueueInterface::PARAM_EVENT_TYPE_TEST_SESSION => TestSessionDataProviderService::class,
+                    SyncPackageDataProviderServiceInterface::OPTION_PROVIDERS => [
+                        SyncQueueInterface::PARAM_EVENT_TYPE_DELIVERY_LOG => new DeliveryLogDataProviderService(),
+                        SyncQueueInterface::PARAM_EVENT_TYPE_LTI_USER     => new LtiUserDataProviderService(),
+                        SyncQueueInterface::PARAM_EVENT_TYPE_RESULTS      => new ResultsDataProviderService(),
+                        SyncQueueInterface::PARAM_EVENT_TYPE_TEST_SESSION => new TestSessionDataProviderService(),
                     ]
                 ]));
-
             $this->getServiceManager()->register(OrgIdProviderInterface::SERVICE_ID, new TestCenterOrgIdService());
-
+            $this->getServiceManager()->register(
+                SyncPackageInterface::SERVICE_ID,
+                new SyncPackageService([
+                    SyncPackageService::OPTION_MIGRATION => new RdsMigrationService([RdsMigrationService::OPTION_PERSISTENCE => 'default']),
+                    SyncPackageService::OPTION_STORAGE   => new SyncPackageFileSystemStorageService(),
+                ])
+            );
             $this->addReport(common_report_Report::createInfo('Create migrations and storage: php index.php \'oat\taoSyncClient\scripts\install\RegisterSyncPackageService\''));
             $this->setVersion('0.2.0');
         }

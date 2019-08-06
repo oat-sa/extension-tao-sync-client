@@ -50,23 +50,18 @@ class RegisterSyncPackageService extends InstallAction
             $syncPackageService = $this->getServiceManager()->get(SyncPackageService::SERVICE_ID);
         } catch (ServiceNotFoundException $e) {
             $syncPackageService = new SyncPackageService([
-                SyncPackageService::OPTION_MIGRATION => RdsMigrationService::class,
-                SyncPackageService::OPTION_MIGRATION_PARAMS => ['default'],
-                SyncPackageService::OPTION_STORAGE => SyncPackageFileSystemStorageService::class,
+                SyncPackageService::OPTION_MIGRATION => new RdsMigrationService([RdsMigrationService::OPTION_PERSISTENCE => 'default']),
+                SyncPackageService::OPTION_STORAGE   => new SyncPackageFileSystemStorageService(),
             ]);
             $syncPackageService->setServiceLocator($this->getServiceLocator());
         }
-
-        $syncPackageMigrationClass = $syncPackageService->getOption(SyncPackageService::OPTION_MIGRATION);
-        $syncPackageMigrationParams = $syncPackageService->getOption(SyncPackageService::OPTION_MIGRATION_PARAMS);
         /** @var MigrationInterface $storage */
-        $migration = new $syncPackageMigrationClass([RdsMigrationService::OPTION_PERSISTENCE => current($syncPackageMigrationParams)]);
+        $migration = $syncPackageService->getOption(SyncPackageService::OPTION_MIGRATION);
         $migration->setServiceLocator($this->getServiceManager());
         $migration->createStorage();
 
         // storage for packages
-        $storagePackageClass = $syncPackageService->getOption(SyncPackageService::OPTION_STORAGE);
-        $storagePackageService = new $storagePackageClass;
+        $storagePackageService = $syncPackageService->getOption(SyncPackageService::OPTION_STORAGE);
 
         if ($storagePackageService->getStorageName()) {
             $serviceManager = $this->getServiceManager();

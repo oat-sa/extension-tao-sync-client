@@ -22,13 +22,13 @@
 namespace oat\taoSyncClient\model\syncQueue;
 
 
+use common_exception_Error;
 use oat\oatbox\service\ConfigurableService;
 use oat\taoProctoring\model\deliveryLog\DeliveryLog;
-use oat\taoSyncClient\model\orgProvider\OrgIdProviderInterface;
+use oat\taoSyncClient\model\exception\SyncClientException;
+use oat\taoSyncClient\model\syncPackage\storage\SyncPackageStorageInterface;
 use oat\taoSyncClient\model\syncQueue\exception\SyncClientSyncQueueException;
 use oat\taoSyncClient\model\syncQueue\storage\SyncQueueStorageInterface;
-use ReflectionClass;
-use ReflectionException;
 
 /**
  * Controls synchronisation from client to server
@@ -42,6 +42,40 @@ class SyncQueueService extends ConfigurableService implements SyncQueueInterface
      * @var SyncQueueStorageInterface
      */
     private $storageService;
+
+    /**
+     * @param array $options
+     * @throws SyncClientException
+     * @throws common_exception_Error
+     */
+    public function setOptions(array $options)
+    {
+        $this->checkOptions($options);
+        parent::setOptions($options);
+    }
+
+    /**
+     * @param $name
+     * @param $value
+     * @throws SyncClientException
+     */
+    public function setOption($name, $value)
+    {
+        $this->checkOptions([$name => $value]);
+        parent::setOption($name, $value);
+    }
+
+    /**
+     * @param array $options
+     * @throws SyncClientException
+     */
+    private function checkOptions(array $options)
+    {
+        if (array_key_exists(self::OPTION_SYNC_QUEUE_STORAGE, $options)
+            && is_subclass_of($options[self::OPTION_SYNC_QUEUE_STORAGE], SyncPackageStorageInterface::class)) {
+            throw new SyncClientException(self::OPTION_SYNC_QUEUE_STORAGE . ' parameter has to be instance of SyncPackageStorageInterface');
+        }
+    }
 
     /**
      * @param array $params
@@ -77,28 +111,14 @@ class SyncQueueService extends ConfigurableService implements SyncQueueInterface
     /**
      * @return SyncQueueStorageInterface
      * @throws SyncClientSyncQueueException
-     * @throws SyncClientSyncQueueException
      */
     protected function getStorageService()
     {
         if (!$this->storageService) {
-            $storageServiceClass = $this->getOption(self::OPTION_SYNC_QUEUE_STORAGE);
-            $hasStorage = true;
-            try {
-                $reflection = new ReflectionClass($storageServiceClass);
-                if ($reflection->implementsInterface(SyncQueueStorageInterface::class)) {
-                    /** @var SyncQueueStorageInterface storageService */
-                    $this->storageService = new $storageServiceClass($this->getOption(self::OPTION_SYNC_QUEUE_STORAGE_PARAMS));
-                    $this->storageService->setServiceLocator($this->getServiceLocator());
-                } else {
-                    $hasStorage = false;
-                }
-            } catch (ReflectionException $e) {
-                $hasStorage = false;
-            }
-            if (!$hasStorage) {
+            if (!$this->hasOption(self::OPTION_SYNC_QUEUE_STORAGE)) {
                 throw new SyncClientSyncQueueException('taoSyncClient SyncQueueStorage is not initialized');
             }
+            $this->storageService = $this->propagate($this->getOption(self::OPTION_SYNC_QUEUE_STORAGE));
         }
         return $this->storageService;
     }
@@ -110,11 +130,17 @@ class SyncQueueService extends ConfigurableService implements SyncQueueInterface
      * @return array
      * @throws SyncClientSyncQueueException
      */
-    public function getTasks(array $dataTypes = [], $limit = 0, $synchronized = false)
+    public function getTasks(array $dataTypes = [], $limit = 5000, $synchronized = false)
     {
         return $this->getStorageService()->getAggregatedQueued($dataTypes, $limit);
     }
 
+    /**
+     * @param int $migrationId
+     * @param array $queuedTasks
+     * @return int
+     * @throws SyncClientSyncQueueException
+     */
     public function markAsMigrated($migrationId = 0, $queuedTasks = [])
     {
         $this->getStorageService()->setMigrationId($migrationId, $queuedTasks);
@@ -141,16 +167,5 @@ class SyncQueueService extends ConfigurableService implements SyncQueueInterface
     private function getDeliveryLogService()
     {
         return $this->getServiceLocator()->get(DeliveryLog::SERVICE_ID);
-    }
-
-    public function getOrgIdsByDeliveryExecutions(array $deliveryExecutionIds = [])
-    {
-        $ids = [];
-        foreach ($deliveryExecutionIds as $deliveryExecutionId) {
-            $ids[] = $this->getServiceLocator()
-                ->get(OrgIdProviderInterface::SERVICE_ID)
-                ->getOrgIdByDeliveryExecution($deliveryExecutionId);
-        }
-        return array_unique($ids);
     }
 }

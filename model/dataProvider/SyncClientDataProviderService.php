@@ -23,21 +23,18 @@ namespace oat\taoSyncClient\model\dataProvider;
 use oat\oatbox\service\ConfigurableService;
 use oat\taoSyncClient\model\exception\SyncClientException;
 use oat\taoSyncClient\model\syncQueue\storage\SyncQueueStorageInterface;
-use ReflectionClass;
-use ReflectionException;
 
-class SyncClientDataProviderService extends ConfigurableService implements SyncClientDataProviderServiceInterface
+class SyncClientDataProviderService extends ConfigurableService implements SyncPackageDataProviderServiceInterface
 {
     /**
      * array of created providers
-     * @var SyncClientDataProviderInterface[]
+     * @var SyncPackageDataProviderInterface[]
      */
     private $providers = [];
 
     /**
      * @param array $tasks
      * @return array
-     * @throws ReflectionException
      * @throws SyncClientException
      */
     public function getData($tasks = [])
@@ -71,12 +68,12 @@ class SyncClientDataProviderService extends ConfigurableService implements SyncC
     }
 
     /**
+     * Getting provider from the initialized providers in the $this->getOption(self::OPTION_PROVIDERS)
      * @param string $type
-     * @return SyncClientDataProviderInterface
+     * @return SyncPackageDataProviderInterface
      * @throws SyncClientException
-     * @throws ReflectionException
      */
-    public function getProvider($type = '')
+    private function getProvider($type = '')
     {
         if (!array_key_exists($type, $this->providers)) {
 
@@ -87,19 +84,14 @@ class SyncClientDataProviderService extends ConfigurableService implements SyncC
             if (!array_key_exists($type, $this->getOption(self::OPTION_PROVIDERS))) {
                 throw new SyncClientException('Data provider ' . $type . ' is not defined');
             }
-
-            $className = $this->getOption(self::OPTION_PROVIDERS)[$type];
-            if (!class_exists($className)) {
-                throw new SyncClientException('Class '.$className. ' not found');
+            /**
+             * @var SyncPackageDataProviderInterface
+             */
+            $provider = $this->getOption(self::OPTION_PROVIDERS)[$type];
+            if (!$provider instanceof SyncPackageDataProviderInterface) {
+                throw new SyncClientException('Type ' . $type . ' has to implement interface ' . SyncPackageDataProviderInterface::class);
             }
-
-            $class = new ReflectionClass($className);
-            if (!$class->implementsInterface(SyncClientDataProviderInterface::class)) {
-                throw new SyncClientException('Class '.$className. ' has to implement interface '.SyncClientDataProviderInterface::class);
-            }
-
-            $this->providers[$type] = new $className;
-            $this->providers[$type]->setServiceLocator($this->getServiceLocator());
+            $this->providers[$type] = $this->propagate($provider);
         }
         return $this->providers[$type];
     }

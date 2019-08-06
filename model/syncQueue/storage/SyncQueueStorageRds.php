@@ -36,16 +36,6 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
     const TABLE_NAME = 'sync_client_queue';
     const OPTION_PERSISTENCE = 'persistence';
 
-    public function __construct($options = array())
-    {
-        // if initialized within other service we need to rewrite config
-        if (!array_key_exists(self::OPTION_PERSISTENCE, $options)
-            && array_key_exists(0, $options) && count($options) === 1) {
-            $options = [self::OPTION_PERSISTENCE => current($options)];
-        }
-        parent::__construct($options);
-    }
-
     /**
      * @param int $migrationId - Id when was migrated, 0 - has not been migrated
      * @param array $types
@@ -82,6 +72,11 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
         return $this->getMigrationData(0, $types, $limit);
     }
 
+    /**
+     * @param int $limit
+     * @param int $offset
+     * @return mixed|mixed[]
+     */
     public function getAll($limit = 10000, $offset = 0)
     {
         $query = $this->getQueryBuilder()
@@ -103,11 +98,20 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
         return $this->getPersistence()->getPlatform()->getQueryBuilder();
     }
 
+    /**
+     * @param array $action
+     * @return mixed
+     */
     public function insert(array $action)
     {
         return $this->getPersistence()->insert(self::TABLE_NAME, $action);
     }
 
+    /**
+     * @param int $migrationId
+     * @param array $queuedTasks
+     * @return bool
+     */
     public function setMigrationId($migrationId, $queuedTasks = [])
     {
         foreach ($queuedTasks as $queuedTask) {
@@ -126,19 +130,29 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
         return true;
     }
 
-    public function isSynchronized($eventType = '', $synchronizedIds = [])
+    /**
+     * @param string $eventType
+     * @param array $synchronizedIds
+     * @return bool
+     */
+    public function isSynchronized($eventType, array $synchronizedIds)
     {
-        $query = $this->getQueryBuilder()
-            ->select('*')
-            ->from(self::TABLE_NAME)
-            ->andWhere(self::PARAM_EVENT_TYPE.'=:eventType')
-            ->andWhere(self::PARAM_SYNCHRONIZABLE_ID.' IN(:ids)')
-            ->andWhere(self::PARAM_SYNC_MIGRATION_ID . ' = :syncMigrationId')
-            ->setParameter('eventType', $eventType)
-            ->setParameter('ids', $synchronizedIds, Connection::PARAM_STR_ARRAY)
-            ->setParameter('syncMigrationId', 0)
-            ->orderBy(self::PARAM_CREATED_AT);
-        return count($query->execute()->fetchAll()) === 0;
+        $isSynced = true;
+        if (count($synchronizedIds) ) {
+            $query = $this->getQueryBuilder()
+                ->select('*')
+                ->from(self::TABLE_NAME)
+                ->andWhere(self::PARAM_EVENT_TYPE.'=:eventType')
+                ->andWhere(self::PARAM_SYNCHRONIZABLE_ID.' IN(:ids)')
+                ->andWhere(self::PARAM_SYNC_MIGRATION_ID . ' = :syncMigrationId')
+                ->setParameter('eventType', $eventType)
+                ->setParameter('ids', $synchronizedIds, Connection::PARAM_STR_ARRAY)
+                ->setParameter('syncMigrationId', 0)
+                ->orderBy(self::PARAM_CREATED_AT);
+
+            $isSynced = count($query->execute()->fetchAll()) === 0;
+        }
+        return $isSynced;
     }
 
     /**
@@ -196,6 +210,9 @@ class SyncQueueStorageRds extends ConfigurableService implements SyncQueueStorag
         return true;
     }
 
+    /**
+     * @return void
+     */
     public function dropStorage()
     {
         $persistence = $this->getPersistence();

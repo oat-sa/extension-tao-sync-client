@@ -22,7 +22,7 @@ namespace oat\taoSyncClient\model\dataProvider;
 
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
 
-interface SyncClientDataProviderInterface extends ServiceLocatorAwareInterface
+interface SyncPackageDataProviderInterface extends ServiceLocatorAwareInterface
 {
     /**
      * Returns required data

@@ -67,7 +67,8 @@ class Updater extends common_ext_ExtensionUpdater
         }
         if ($this->isVersion('0.2.0')) {
             $this->getServiceManager()->register(DownloadServiceInterface::SERVICE_ID, new DirectDownloadService());
-            $this->setVersion('0.3.0');
+            $this->addReport(common_report_Report::createInfo('Added taoPublishing dependency'));
+            $this->setVersion('1.0.0');
         }
     }
 }

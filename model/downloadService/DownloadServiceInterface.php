@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -16,15 +17,17 @@
  *
  * Copyright (c) 2019  (original work) Open Assessment Technologies SA;
  *
- * @author Oleksandr Zagovorychev <zagovorichev@gmail.com>
  */
 
-namespace oat\taoSyncClient\model\syncResults;
+namespace oat\taoSyncClient\model\downloadService;
 
-
-interface SyncResultsInterface
+interface DownloadServiceInterface
 {
-    const SERVICE_ID = 'taoSyncClient/SyncResultsService';
+    const SERVICE_ID = 'taoSyncClient/downloadService';
 
-    const OPTION_STATUS_EXECUTIONS_TO_SYNC = 'statusExecutionsToSync';
+    /**
+     * @param $params
+     * @return array
+     */
+    public function download($params);
 }

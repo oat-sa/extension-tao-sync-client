@@ -22,6 +22,8 @@
 namespace oat\taoSyncClient\model\syncQueue\listener;
 
 
+use oat\taoDelivery\model\execution\ServiceProxy;
+use oat\taoDelivery\model\execution\StateService;
 use oat\taoLti\models\classes\user\events\LtiUserCreatedEvent;
 use oat\taoLti\models\classes\user\events\LtiUserUpdatedEvent;
 use oat\taoSyncClient\model\syncQueue\exception\SyncClientSyncQueueException;
@@ -39,10 +41,7 @@ class LtiUserListener extends AbstractSyncQueueListener
      */
     public static function create(LtiUserCreatedEvent $createdEvent)
     {
-        self::addTask([
-            self::PARAM_USER_ID => $createdEvent->getUserId(),
-            self::PARAM_EVENT => SyncQueueInterface::PARAM_EVENT_TYPE_LTI_USER_CREATED,
-        ]);
+        self::addTask($createdEvent->getUserId());
     }
 
     /**
@@ -51,24 +50,46 @@ class LtiUserListener extends AbstractSyncQueueListener
      */
     public static function update(LtiUserUpdatedEvent $updatedEvent)
     {
-        self::addTask([
-            self::PARAM_USER_ID => $updatedEvent->getUserId(),
-            self::PARAM_EVENT => SyncQueueInterface::PARAM_EVENT_TYPE_LTI_USER_UPDATED,
-        ]);
+        self::addTask($updatedEvent->getUserId());
     }
 
     /**
-     * @param array $params
+     * @param string $userId
      * @throws SyncClientSyncQueueException
      */
-    private static function addTask(array $params)
+    private static function addTask($userId)
     {
-        self::getSyncQueueService()->addTask([
-            SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID => $params[self::PARAM_USER_ID],
-            SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_TYPE => SyncQueueInterface::PARAM_SYNCHRONIZABLE_TYPE_LTI_USER,
-            SyncQueueStorageInterface::PARAM_EVENT_TYPE => $params[self::PARAM_EVENT],
-            SyncQueueStorageInterface::PARAM_CREATED_AT => date('Y-m-d H:i:s'),
-            SyncQueueStorageInterface::PARAM_UPDATED_AT => date('Y-m-d H:i:s'),
-        ]);
+        foreach (static::getOrgIds($userId) as $orgId) {
+            self::getSyncQueueService()->addTask([
+                SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID => $userId,
+                SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_TYPE => SyncQueueInterface::PARAM_SYNCHRONIZABLE_TYPE_LTI_USER,
+                SyncQueueStorageInterface::PARAM_EVENT_TYPE => SyncQueueInterface::PARAM_EVENT_TYPE_LTI_USER,
+                SyncQueueStorageInterface::PARAM_CREATED_AT => date('Y-m-d H:i:s'),
+                SyncQueueStorageInterface::PARAM_UPDATED_AT => date('Y-m-d H:i:s'),
+                SyncQueueStorageInterface::PARAM_ORG_ID => $orgId,
+            ]);
+        }
+    }
+
+    private static function getOrgIds($userId = '')
+    {
+        // I need to get all organizations of the user
+        /** @var ServiceProxy $deliveryExecutionService */
+        $deliveryExecutionService = static::getServiceManager()->get(ServiceProxy::SERVICE_ID);
+        $executions = $executionsIds = [];
+        foreach (static::getActiveDeliveryExecutionStatuses() as $status) {
+            $executions = array_merge(...$deliveryExecutionService->getDeliveryExecutionsByStatus($userId, $status));
+        }
+        foreach ($executions as $execution) {
+            $executionsIds[] = $execution->getUri();
+        }
+        return static::getOrgIdsByDeliveryExecutions($executionsIds);
+    }
+
+    public static function getActiveDeliveryExecutionStatuses()
+    {
+        /** @var StateService $statesService */
+        $statesService = static::getServiceManager()->get(StateService::SERVICE_ID);
+        return $statesService->getDeliveriesStates();
     }
 }

@@ -25,6 +25,7 @@ namespace oat\taoSyncClient\scripts\install;
 use common_report_Report;
 use oat\oatbox\extension\InstallAction;
 use oat\taoDelivery\models\classes\execution\event\DeliveryExecutionCreated;
+use oat\taoDelivery\models\classes\execution\event\DeliveryExecutionReactivated;
 use oat\taoDelivery\models\classes\execution\event\DeliveryExecutionState;
 use oat\taoLti\models\classes\user\events\LtiUserCreatedEvent;
 use oat\taoLti\models\classes\user\events\LtiUserUpdatedEvent;
@@ -34,6 +35,12 @@ use oat\taoSyncClient\model\syncQueue\listener\LtiUserListener;
 use oat\taoSyncClient\model\syncQueue\listener\ResultsListener;
 use oat\taoSyncClient\model\syncQueue\listener\TestSessionListener;
 
+/**
+ * php index.php '\oat\taoSyncClient\scripts\install\SetupSyncQueueEventsListener'
+ *
+ * Class SetupSyncQueueEventsListener
+ * @package oat\taoSyncClient\scripts\install
+ */
 class SetupSyncQueueEventsListener extends InstallAction
 {
     public function __invoke($params)
@@ -51,6 +58,7 @@ class SetupSyncQueueEventsListener extends InstallAction
         // test session
         $this->registerEvent(DeliveryExecutionState::class, [TestSessionListener::class, 'deliveryExecutionStateChanged']);
         $this->registerEvent(DeliveryExecutionCreated::class, [TestSessionListener::class, 'deliveryExecutionStateChanged']);
+        $this->registerEvent(DeliveryExecutionReactivated::class, [TestSessionListener::class, 'deliveryExecutionStateChanged']);
 
         return common_report_Report::createSuccess(__('Registered SyncQueue Events listeners'));
     }

@@ -16,15 +16,36 @@
  *
  * Copyright (c) 2019  (original work) Open Assessment Technologies SA;
  *
- * @author Oleksandr Zagovorychev <zagovorichev@gmail.com>
+ * @author Oleksandr Zagovorychev <zagovorichev@1pt.com>
  */
 
-namespace oat\taoSyncClient\model\syncResults;
+namespace oat\taoSyncClient\model\syncPackage\storage;
 
 
-interface SyncResultsInterface
+use Zend\ServiceManager\ServiceLocatorAwareInterface;
+
+interface SyncPackageStorageInterface extends ServiceLocatorAwareInterface
 {
-    const SERVICE_ID = 'taoSyncClient/SyncResultsService';
+    /**
+     * checks that storage can be used
+     * @return bool
+     */
+    public function isValid();
 
-    const OPTION_STATUS_EXECUTIONS_TO_SYNC = 'statusExecutionsToSync';
+    /**
+     * Create new package
+     * @param array $data
+     * @return string|bool package name or false if file can't be created
+     */
+    public function createPackage($data = []);
+
+    /**
+     * @return void
+     */
+    public function createStorage();
+
+    /**
+     * @return string
+     */
+    public function getStorageName();
 }

@@ -16,7 +16,6 @@
  *
  * Copyright (c) 2019  (original work) Open Assessment Technologies SA;
  *
- * @author Oleksandr Zagovorychev <zagovorichev@1pt.com>
  */
 
 namespace oat\taoSyncClient\scripts\install;
@@ -24,16 +23,16 @@ namespace oat\taoSyncClient\scripts\install;
 use common_report_Report;
 use oat\oatbox\extension\InstallAction;
 use oat\oatbox\service\ServiceNotFoundException;
-use oat\taoSyncClient\model\syncQueue\storage\SyncQueueStorageRds;
-use oat\taoSyncClient\model\syncQueue\SyncQueueService;
+use oat\taoSyncClient\model\downloadService\DirectDownloadService;
+use oat\taoSyncClient\model\downloadService\DownloadServiceInterface;
 
 /**
- * php index.php 'oat\taoSyncClient\scripts\install\RegisterSyncQueueRds'
+ * php index.php 'oat\taoSyncClient\scripts\install\RegisterDownloadService'
  *
- * Class RegisterSyncQueueRds
+ * Class RegisterDownloadService
  * @package oat\taoSyncClient\scripts\install
  */
-class RegisterSyncQueueRds extends InstallAction
+class RegisterDownloadService extends InstallAction
 {
     /**
      * @param $params
@@ -43,17 +42,11 @@ class RegisterSyncQueueRds extends InstallAction
     public function __invoke($params)
     {
         try {
-            $syncQueueService = $this->getServiceLocator()->get(SyncQueueService::SERVICE_ID);
+            $this->getServiceManager()->get(DownloadServiceInterface::SERVICE_ID);
         } catch (ServiceNotFoundException $e) {
-            $syncQueueService = new SyncQueueService([
-                SyncQueueService::OPTION_SYNC_QUEUE_STORAGE => new SyncQueueStorageRds([SyncQueueStorageRds::OPTION_PERSISTENCE => 'default']),
-            ]);
+            $downloadService = new DirectDownloadService();
+            $this->getServiceManager()->register(DownloadServiceInterface::SERVICE_ID, $downloadService);
         }
-        $syncQueueService
-            ->getOption(SyncQueueService::OPTION_SYNC_QUEUE_STORAGE)
-            ->setServiceLocator($this->getServiceLocator())
-            ->createStorage();
-        $this->getServiceManager()->register(SyncQueueService::SERVICE_ID, $syncQueueService);
-        return new common_report_Report(common_report_Report::TYPE_SUCCESS, __('SyncClient queue storage successfully created'));
+        return new common_report_Report(common_report_Report::TYPE_SUCCESS, __('DownloadService successfully registered'));
     }
 }

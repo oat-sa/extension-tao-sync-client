@@ -28,16 +28,11 @@ interface SyncQueueStorageInterface
     const PARAM_SYNCHRONIZABLE_ID = 'synchronizable_id';
     const PARAM_SYNCHRONIZABLE_TYPE = 'synchronizable_type';
     const PARAM_EVENT_TYPE = 'event_type';
-    const PARAM_SYNC_ID = 'sync_id';
+    const PARAM_ORG_ID = 'org_id';
+    // id from the migrationService
+    const PARAM_SYNC_MIGRATION_ID = 'sync_migration_id';
     const PARAM_CREATED_AT = 'created_at';
     const PARAM_UPDATED_AT = 'updated_at';
-
-    /**
-     * Get only not synchronized data from the queue
-     * @param int $limit - (0 - all the data that wasn't synchronized)
-     * @return array
-     */
-    public function getQueued($limit = 0);
 
     /**
      * Get all the data synchronized and not
@@ -54,10 +49,36 @@ interface SyncQueueStorageInterface
      */
     public function insert(array $action);
 
+
     /**
-     * Mark the record as synchronized
-     * @param $id
-     * @return mixed
+     * * Mark the record as synchronized
+     * @param int $migrationId
+     * @param array $taskIds
+     * @return bool
      */
-    public function setSyncId($id);
+    public function setMigrationId($migrationId, $taskIds = []);
+
+    /**
+     * @param array $dataTypes
+     * @param int $limit
+     * @return array
+     */
+    public function getAggregatedQueued(array $dataTypes = [], $limit = 5000);
+
+    /**
+     * Checks that all synchronizable resources were migrated
+     * (Example: Test session can't be synchronized without delivery log data)
+     * @param string $eventType
+     * @param array $synchronizableIds
+     * @return bool
+     */
+    public function isSynchronized($eventType, array $synchronizableIds);
+
+    /**
+     * @param int $migrationId
+     * @param array $types
+     * @param int $limit
+     * @return array
+     */
+    public function getMigrationData($migrationId = 0, array $types = [], $limit = 5000);
 }

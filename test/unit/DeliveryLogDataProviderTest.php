@@ -19,12 +19,24 @@
  * @author Oleksandr Zagovorychev <zagovorichev@gmail.com>
  */
 
-namespace oat\taoSyncClient\model\syncResults;
+namespace oat\taoSyncClient\test\model;
 
 
-interface SyncResultsInterface
+use oat\generis\test\TestCase;
+use oat\taoProctoring\model\deliveryLog\DeliveryLog;
+use oat\taoSyncClient\model\dataProvider\providers\DeliveryLogDataProviderService;
+
+class DeliveryLogDataProviderTest extends TestCase
 {
-    const SERVICE_ID = 'taoSyncClient/SyncResultsService';
-
-    const OPTION_STATUS_EXECUTIONS_TO_SYNC = 'statusExecutionsToSync';
+    public function testGetData()
+    {
+        $deliveryLogService = $this->getMock(DeliveryLog::class);
+        $deliveryLogService->method('search')->willReturn(['1234']);
+        $serviceLocator = $this->getServiceLocatorMock([
+            DeliveryLog::SERVICE_ID => $deliveryLogService,
+        ]);
+        $service = new DeliveryLogDataProviderService([]);
+        $service->setServiceLocator($serviceLocator);
+        self::assertSame(['1234'], $service->getData());
+    }
 }

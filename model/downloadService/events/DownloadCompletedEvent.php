@@ -16,15 +16,46 @@
  *
  * Copyright (c) 2019  (original work) Open Assessment Technologies SA;
  *
- * @author Oleksandr Zagovorychev <zagovorichev@gmail.com>
  */
 
-namespace oat\taoSyncClient\model\syncResults;
+namespace oat\taoSyncClient\model\downloadService\events;
 
 
-interface SyncResultsInterface
+use oat\oatbox\event\Event;
+
+class DownloadCompletedEvent implements Event
 {
-    const SERVICE_ID = 'taoSyncClient/SyncResultsService';
+    const EVENT_NAME = __CLASS__;
+    private $syncId;
+    private $filePath;
 
-    const OPTION_STATUS_EXECUTIONS_TO_SYNC = 'statusExecutionsToSync';
+    public function __construct($syncId = 0, $filePath = '')
+    {
+        $this->syncId = $syncId;
+        $this->filePath = $filePath;
+    }
+
+    /**
+     * @return int
+     */
+    public function getSyncId()
+    {
+        return $this->syncId;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFilePath()
+    {
+        return $this->filePath;
+    }
+
+    /**
+     * @return string
+     */
+    public function getName()
+    {
+        return self::EVENT_NAME;
+    }
 }

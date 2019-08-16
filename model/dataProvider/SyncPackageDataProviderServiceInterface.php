@@ -19,12 +19,11 @@
  * @author Oleksandr Zagovorychev <zagovorichev@gmail.com>
  */
 
-namespace oat\taoSyncClient\model\syncResults;
+namespace oat\taoSyncClient\model\dataProvider;
 
 
-interface SyncResultsInterface
+interface SyncPackageDataProviderServiceInterface extends SyncPackageDataProviderInterface
 {
-    const SERVICE_ID = 'taoSyncClient/SyncResultsService';
-
-    const OPTION_STATUS_EXECUTIONS_TO_SYNC = 'statusExecutionsToSync';
+    const SERVICE_ID = 'taoSyncClient/SyncClientDataProviderService';
+    const OPTION_PROVIDERS = 'providers';
 }

@@ -19,12 +19,26 @@
  * @author Oleksandr Zagovorychev <zagovorichev@gmail.com>
  */
 
-namespace oat\taoSyncClient\model\syncResults;
+namespace oat\taoSyncClient\model\syncPackage;
 
 
-interface SyncResultsInterface
+use common_report_Report;
+
+interface SyncPackageInterface
 {
-    const SERVICE_ID = 'taoSyncClient/SyncResultsService';
+    const SERVICE_ID = 'taoSyncClient/SyncPackageService';
 
-    const OPTION_STATUS_EXECUTIONS_TO_SYNC = 'statusExecutionsToSync';
+    /**
+     * Create package with data
+     * @param array $dataTypes
+     * @param int $limit
+     * @return int count of the selected for the package data
+     */
+    public function create($dataTypes = [], $limit = 0);
+
+    /**
+     * Report of the last create operation
+     * @return common_report_Report
+     */
+    public function getReport();
 }

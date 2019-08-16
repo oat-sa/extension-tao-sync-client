@@ -28,7 +28,7 @@ use oat\taoPublishing\model\publishing\PublishingService;
 use oat\taoSync\scripts\tool\synchronisation\SynchronizeData;
 use oat\taoSyncClient\model\downloadService\tasks\DownloadTask;
 
-class DirectDownloadService extends ConfigurableService
+class DirectDownloadService extends ConfigurableService implements DownloadServiceInterface
 {
     /**
      * Basic curl options for resumable downloading

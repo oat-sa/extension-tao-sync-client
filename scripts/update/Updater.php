@@ -70,5 +70,7 @@ class Updater extends common_ext_ExtensionUpdater
             $this->addReport(common_report_Report::createInfo('Added taoPublishing dependency'));
             $this->setVersion('1.0.0');
         }
+
+        $this->skip('1.0.0', '1.0.1');
     }
 }

@@ -76,14 +76,14 @@ class LtiUserListener extends AbstractSyncQueueListener
         // I need to get all organizations of the user
         /** @var ServiceProxy $deliveryExecutionService */
         $deliveryExecutionService = static::getServiceManager()->get(ServiceProxy::SERVICE_ID);
-        $executions = $executionsIds = [];
+        $executionsIds = [];
         foreach (static::getActiveDeliveryExecutionStatuses() as $status) {
-            $executions = array_merge(...$deliveryExecutionService->getDeliveryExecutionsByStatus($userId, $status));
+            $executions = $deliveryExecutionService->getDeliveryExecutionsByStatus($userId, $status);
+            foreach ($executions as $execution) {
+                $executionsIds[] = $execution->getUri();
+            }
         }
-        foreach ($executions as $execution) {
-            $executionsIds[] = $execution->getUri();
-        }
-        return static::getOrgIdsByDeliveryExecutions($executionsIds);
+        return static::getOrgIdsByDeliveryExecutions(array_unique($executionsIds));
     }
 
     public static function getActiveDeliveryExecutionStatuses()

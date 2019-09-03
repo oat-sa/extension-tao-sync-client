@@ -24,12 +24,8 @@ use core_kernel_persistence_Exception;
 use oat\oatbox\service\ConfigurableService;
 use oat\taoDelivery\model\execution\DeliveryExecution;
 use oat\taoDelivery\model\execution\ServiceProxy;
-use oat\taoDeliveryRdf\helper\DetectTestAndItemIdentifiersHelper;
-use oat\taoResultServer\models\classes\ResultManagement;
-use oat\taoResultServer\models\classes\ResultServerService;
+use oat\taoSync\model\Result\SyncResultDataFormatter;
 use oat\taoSyncClient\model\dataProvider\SyncPackageDataProviderInterface;
-use taoResultServer_models_classes_ReadableResultStorage;
-use taoResultServer_models_classes_WritableResultStorage;
 
 /**
  * Class ResultDataProviderService
@@ -46,91 +42,21 @@ class ResultsDataProviderService extends ConfigurableService implements SyncPack
     public function getData($deliveryExecutionIds = [])
     {
         $results = [];
+        $formatter = $this->getDataFormatter();
         foreach ($deliveryExecutionIds as $deliveryExecutionId) {
             /** @var DeliveryExecution $deliveryExecution */
             $deliveryExecution = $this->getServiceProxy()->getDeliveryExecution($deliveryExecutionId);
-            $variables = $this->getDeliveryExecutionVariables($deliveryExecution->getDelivery()->getUri(), $deliveryExecutionId);
-            $results[] = [
-                'deliveryId'          => $deliveryExecution->getDelivery()->getUri(),
-                'deliveryExecutionId' => $deliveryExecutionId,
-                'details'             => $this->getDeliveryExecutionDetails($deliveryExecutionId),
-                'variables'           => $variables,
-            ];
+            $results[] = $formatter->format($deliveryExecution);
         }
         return $results;
     }
 
     /**
-     * Get details of a delivery execution
-     * we don't prevent exceptions, because if something can't be synchronized then we have
-     * data inconsistency and this is an error
-     *
-     * @param $deliveryExecutionId
-     * @return array
-     * @throws common_exception_NotFound
+     * @return SyncResultDataFormatter
      */
-    private function getDeliveryExecutionDetails($deliveryExecutionId)
+    private function getDataFormatter()
     {
-        /** @var DeliveryExecution $deliveryExecution */
-        $deliveryExecution = $this->getServiceProxy()->getDeliveryExecution($deliveryExecutionId);
-        return [
-            'identifier' => $deliveryExecution->getIdentifier(),
-            'label'      => $deliveryExecution->getLabel(),
-            'test-taker' => $deliveryExecution->getUserIdentifier(),
-            'starttime'  => $deliveryExecution->getStartTime(),
-            'finishtime' => $deliveryExecution->getFinishTime(),
-            'state'      => $deliveryExecution->getState()->getUri(),
-        ];
-    }
-
-    /**
-     * Get variables of a delivery execution
-     *
-     * @param $deliveryId
-     * @param $deliveryExecutionId
-     * @return array
-     * @throws core_kernel_persistence_Exception
-     */
-    private function getDeliveryExecutionVariables($deliveryId, $deliveryExecutionId)
-    {
-        $variables = $this->getResultStorage($deliveryId)->getDeliveryVariables($deliveryExecutionId);
-        $deliveryExecutionVariables = [];
-        foreach ($variables as $variable) {
-            $variable = (array) current($variable);
-            $test = $this->getVariable('test', $variable);
-            $item = $this->getVariable('item', $variable);
-            list($testIdentifier, $itemIdentifier) = (new DetectTestAndItemIdentifiersHelper())
-                ->detect($deliveryId, $test, $item);
-            $deliveryExecutionVariables[] = [
-                'type'       => $this->getVariable('class', $variable),
-                'callIdTest' => $this->getVariable('callIdTest', $variable),
-                'callIdItem' => $this->getVariable('callIdItem', $variable),
-                'test'       => $testIdentifier,
-                'item'       => $itemIdentifier,
-                'data'       => $this->getVariable('variable', $variable),
-            ];
-        }
-        return $deliveryExecutionVariables;
-    }
-
-    /**
-     * Getting a variable from the array with variables
-     * @param string $name
-     * @param array $variables
-     * @return mixed|null
-     */
-    private function getVariable($name = '', array $variables = [])
-    {
-        return array_key_exists($name, $variables) ? $variables[$name] : null;
-    }
-
-    /**
-     * @param $deliveryId
-     * @return taoResultServer_models_classes_ReadableResultStorage|taoResultServer_models_classes_WritableResultStorage|ResultManagement
-     */
-    private function getResultStorage($deliveryId)
-    {
-        return $this->getServiceLocator()->get(ResultServerService::SERVICE_ID)->getResultStorage($deliveryId);
+        return $this->getServiceLocator()->get(SyncResultDataFormatter::SERVICE_ID);
     }
 
     /**

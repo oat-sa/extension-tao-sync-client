@@ -26,7 +26,7 @@ Controls synchronization packages
 | `d` | Sync delivery log data type |
 | `r` | Sync results |
 | `s` | Sync test sessions |
-| `l` | Limit of the data for one package (it means that only `limit` rows will be taken from the sync queue to the package file) |
+| `l n` | Limit of the data for one package (it means that only `n` rows will be taken from the sync queue to the package file) |
 | `h` | Help |
 | `v` | Force script to see more details |
 

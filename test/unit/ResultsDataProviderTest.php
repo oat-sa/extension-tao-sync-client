@@ -22,12 +22,9 @@
 namespace oat\taoSyncClient\test\model;
 
 
-use core_kernel_classes_Resource;
 use oat\generis\test\TestCase;
 use oat\taoDelivery\model\execution\ServiceProxy;
-use oat\taoProctoring\model\execution\DeliveryExecution;
-use oat\taoResultServer\models\classes\ResultManagement;
-use oat\taoResultServer\models\classes\ResultServerService;
+use oat\taoSync\model\Result\SyncResultDataFormatter;
 use oat\taoSyncClient\model\dataProvider\providers\ResultsDataProviderService;
 
 class ResultsDataProviderTest extends TestCase
@@ -38,63 +35,17 @@ class ResultsDataProviderTest extends TestCase
      */
     public function testGetData()
     {
-        $resource = $this->getMock(core_kernel_classes_Resource::class, [], [], '', false);
-        $resource->method('getUri')->willReturn('deliveryExecutionUri');
-        $deliveryExecution = $this->getMock(DeliveryExecution::class);
-        $deliveryExecution->method('getDelivery')->willReturn($resource);
-        $deliveryExecution->method('getIdentifier')->willReturn('identifier');
-        $deliveryExecution->method('getLabel')->willReturn('label');
-        $deliveryExecution->method('getUserIdentifier')->willReturn('user_id');
-        $deliveryExecution->method('getStartTime')->willReturn('start_time');
-        $deliveryExecution->method('getFinishTime')->willReturn('finish_time');
-        $deliveryExecution->method('getState')->willReturn($resource);
-
-        $deliveryExecutionProxyService = $this->getMock(ServiceProxy::class, [], [], '', false);
-        $deliveryExecutionProxyService->method('getDeliveryExecution')->willReturn($deliveryExecution);
-        $resultServerService = $this->getMock(ResultServerService::class);
-        $resultManagement = $this->getMock(ResultManagement::class);
-        $resultManagement->method('getDeliveryVariables')->willReturn([
-            [
-                [
-                    'test' => null,
-                    'item' => null,
-                    'class' => 'class',
-                    'callIdTest' => 'callIdTest',
-                    'callIdItem' => 'callIdItem',
-                    'variable' => 'variable',
-                ]
-            ]
-        ]);
-        $resultServerService->method('getResultStorage')->willReturn($resultManagement);
+        $deliveryExecutionProxyService = $this->createMock(ServiceProxy::class);
+        $deliveryExecutionProxyService->method('getDeliveryExecution')->willReturn(null);
+        $formatterMock = $this->createMock(SyncResultDataFormatter::class);
+        $formatterResultValue = ['formatter' => 'result'];
+        $formatterMock->expects($this->once())->method('format')->willReturn($formatterResultValue);
         $serviceLocator = $this->getServiceLocatorMock([
             ServiceProxy::SERVICE_ID => $deliveryExecutionProxyService,
-            ResultServerService::SERVICE_ID => $resultServerService,
+            SyncResultDataFormatter::SERVICE_ID => $formatterMock,
         ]);
         $service = new ResultsDataProviderService([]);
         $service->setServiceLocator($serviceLocator);
-        self::assertSame([
-            [
-                'deliveryId' => 'deliveryExecutionUri',
-                'deliveryExecutionId' => 1,
-                'details' => [
-                    'identifier' => 'identifier',
-                    'label' => 'label',
-                    'test-taker' => 'user_id',
-                    'starttime' => 'start_time',
-                    'finishtime' => 'finish_time',
-                    'state' => 'deliveryExecutionUri',
-                ],
-                'variables' => [
-                    [
-                        'type' => 'class',
-                        'callIdTest' => 'callIdTest',
-                        'callIdItem' => 'callIdItem',
-                        'test' => null,
-                        'item' => null,
-                        'data' => 'variable',
-                    ],
-                ]
-            ]
-        ], $service->getData([1]));
+        self::assertSame([$formatterResultValue], $service->getData([1]));
     }
 }

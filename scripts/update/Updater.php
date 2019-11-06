@@ -24,6 +24,10 @@ namespace oat\taoSyncClient\scripts\update;
 
 use common_ext_ExtensionUpdater;
 use common_report_Report;
+use oat\taoDeliveryRdf\model\import\AssemblerService;
+use oat\taoDeliveryRdf\model\import\StaticAssemblerService;
+use oat\taoQtiTest\models\CompilationDataService;
+use oat\taoQtiTest\models\XmlCompilationDataService;
 use oat\taoSyncClient\model\dataProvider\providers\DeliveryLogDataProviderService;
 use oat\taoSyncClient\model\dataProvider\providers\LtiUserDataProviderService;
 use oat\taoSyncClient\model\dataProvider\providers\ResultsDataProviderService;
@@ -72,5 +76,19 @@ class Updater extends common_ext_ExtensionUpdater
         }
 
         $this->skip('1.0.0', '1.1.0');
+
+        if ($this->isVersion('1.1.0')) {
+
+            // rewrite AssemblerService to import deliveries with static content (manifest runtime is json now instead of serialized php)
+            $options = $this->getServiceManager()->get(AssemblerService::SERVICE_ID)->getOptions();
+            $service = new StaticAssemblerService($options);
+            $this->getServiceManager()->register(AssemblerService::SERVICE_ID, $service);
+
+            // rewrite CompilationDataService to use xml files instead of php (compact-test.php)
+            $options = $this->getServiceManager()->get(CompilationDataService::SERVICE_ID)->getOptions();
+            $this->getServiceManager()->register(CompilationDataService::SERVICE_ID, new XmlCompilationDataService($options));
+
+            $this->setVersion('2.0.0');
+        }
     }
 }

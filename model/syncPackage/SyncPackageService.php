@@ -25,11 +25,12 @@ namespace oat\taoSyncClient\model\syncPackage;
 use common_exception_Error;
 use common_report_Report;
 use oat\oatbox\service\ConfigurableService;
-use oat\taoSyncClient\model\dataProvider\SyncPackageDataProviderInterface;
-use oat\taoSyncClient\model\dataProvider\SyncPackageDataProviderServiceInterface;
+use oat\taoSync\model\dataProvider\DataProviderCollection;
+use oat\taoSync\model\Exception\DataProviderException;
 use oat\taoSyncClient\model\exception\SyncClientException;
 use oat\taoSyncClient\model\syncPackage\migration\MigrationInterface;
 use oat\taoSyncClient\model\syncPackage\storage\SyncPackageStorageInterface;
+use oat\taoSyncClient\model\syncQueue\storage\SyncQueueStorageInterface;
 use oat\taoSyncClient\model\syncQueue\SyncQueueInterface;
 use oat\taoSyncClient\model\syncQueue\SyncQueueService;
 
@@ -64,7 +65,7 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
     private $migrationService;
 
     /**
-     * @var SyncPackageDataProviderInterface
+     * @var DataProviderCollection
      */
     private $dataProviderService;
 
@@ -76,7 +77,7 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
 
     /**
      * @param array $options
-     * @throws SyncClientException
+     * @throws SyncServerBaseException
      * @throws common_exception_Error
      */
     public function setOptions(array $options)
@@ -133,13 +134,12 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
     }
 
     /**
-     * @return mixed|SyncPackageDataProviderInterface
+     * @return DataProviderCollection
      */
     private function getDataProviderService()
     {
         if (!$this->dataProviderService) {
-            $service = $this->getServiceLocator()->get(SyncPackageDataProviderServiceInterface::SERVICE_ID);
-            $this->dataProviderService = $this->propagate($service);
+            $this->dataProviderService = $this->getServiceLocator()->get(DataProviderCollection::SERVICE_ID);
         }
         return $this->dataProviderService;
     }
@@ -163,15 +163,19 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
      */
     public function create($dataTypes = [], $limit = 0)
     {
+
         $this->report = common_report_Report::createInfo('Package creation started');
         $dataCount = 0;
         if ($this->getStorageService()->isValid()) {
             $queuedTasks = $this->getSyncQueueService()->getTasks($dataTypes, $limit);
+
             $data = $this->getData($queuedTasks);
+
             if (array_key_exists('test_session', $data)) {
                 // excluded tasks won't be marked as migrated
                 $queuedTasks = $this->filterTestSessions($data, $queuedTasks);
             }
+
             $dataCount = count($data);
             if (!$dataCount || !count($queuedTasks)) {
                 $this->report->add(common_report_Report::createSuccess('There is no data for migration.'));
@@ -188,6 +192,7 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
                 }
             }
         }
+
         return $dataCount;
     }
 
@@ -227,11 +232,40 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
 
     /**
      * Get prepared data from the data providers
-     * @param $task
+     * @param array $tasks
      * @return array
+     * @throws DataProviderException|SyncClientException
      */
-    private function getData($task)
+    private function getData(array $tasks)
     {
-        return $task ? $this->getDataProviderService()->getData($task) : [];
+        $data = [];
+
+        if ($tasks) {
+            foreach ($this->getGroupedTasks($tasks) as $type => $items) {
+                $data[$type] = $this->getDataProviderService()->getProvider($type)->getData($items);
+            }
+        }
+        return $data;
+    }
+
+    /**
+     * Group tasks by their data type
+     * @param array $tasks
+     * @return array
+     * @throws SyncClientException
+     */
+    private function getGroupedTasks($tasks = [])
+    {
+        $groupedTasks = [];
+        foreach ($tasks as $key => $task) {
+            if (!is_array($task)
+                || !array_key_exists(SyncQueueStorageInterface::PARAM_EVENT_TYPE, $task)
+                || !array_key_exists(SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID, $task)
+            ) {
+                throw new SyncClientException('Incorrect task format #'.$key);
+            }
+            $groupedTasks[$task[SyncQueueStorageInterface::PARAM_EVENT_TYPE]][] = $task[SyncQueueStorageInterface::PARAM_SYNCHRONIZABLE_ID];
+        }
+        return $groupedTasks;
     }
 }

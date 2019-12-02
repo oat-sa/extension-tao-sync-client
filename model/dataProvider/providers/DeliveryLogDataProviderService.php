@@ -19,17 +19,24 @@
 
 namespace oat\taoSyncClient\model\dataProvider\providers;
 
-use oat\oatbox\service\ConfigurableService;
 use oat\taoProctoring\model\deliveryLog\DeliveryLog;
-use oat\taoSyncClient\model\dataProvider\SyncPackageDataProviderInterface;
+use oat\taoSync\model\dataProvider\AbstractDataProvider;
+use oat\taoSyncClient\model\syncPackage\SyncPackageService;
 
-class DeliveryLogDataProviderService extends ConfigurableService implements SyncPackageDataProviderInterface
+class DeliveryLogDataProviderService extends AbstractDataProvider
 {
     /**
-     * @param array $synchronizableIds
-     * @return array
+     * @inheritDoc
      */
-    public function getData($synchronizableIds = [])
+    public function getType()
+    {
+        return SyncPackageService::PARAM_DELIVERY_LOG;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getResources(array $synchronizableIds = [])
     {
         return $this->getDeliveryLogService()->search(
                 [DeliveryLog::ID => $synchronizableIds],

@@ -19,27 +19,32 @@
 
 namespace oat\taoSyncClient\model\dataProvider\providers;
 
-use common_exception_InvalidArgumentType;
 use core_kernel_classes_Resource;
 use oat\generis\model\OntologyAwareTrait;
-use oat\oatbox\service\ConfigurableService;
 use oat\taoLti\models\classes\user\LtiUserService;
-use oat\taoSyncClient\model\dataProvider\SyncPackageDataProviderInterface;
+use oat\taoSync\model\dataProvider\AbstractDataProvider;
+use oat\taoSyncClient\model\syncPackage\SyncPackageService;
 
 /**
  * Class LtiUserDataProviderService
  * @package oat\taoSyncClient\model\dataProvider\providers
  */
-class LtiUserDataProviderService extends ConfigurableService implements SyncPackageDataProviderInterface
+class LtiUserDataProviderService extends AbstractDataProvider
 {
     use OntologyAwareTrait;
 
     /**
-     * @param array $usersId
-     * @return array
-     * @throws common_exception_InvalidArgumentType
+     * @inheritDoc
      */
-    public function getData($usersId = [])
+    public function getType()
+    {
+        return SyncPackageService::PARAM_LTI_USER;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getResources(array $usersId = [])
     {
         $usersId = array_unique($usersId);
         $users = [];

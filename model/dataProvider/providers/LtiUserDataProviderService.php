@@ -48,32 +48,11 @@ class LtiUserDataProviderService extends AbstractDataProvider
     {
         $usersId = array_unique($usersId);
         $users = [];
+
         foreach ($usersId as $userId) {
-            $user = [];
-            $resource = $this->getResource($userId);
-            /** @var core_kernel_classes_Resource $consumerResource */
-            $properties = $resource->getPropertiesValues([
-                $this->getProperty(LtiUserService::PROPERTY_USER_LTICONSUMER),
-                $this->getProperty(LtiUserService::PROPERTY_USER_LTIKEY),
-            ]);
-            $user['client_user_id'] = $userId;
-            $user['consumer'] = array_key_exists(LtiUserService::PROPERTY_USER_LTICONSUMER, $properties)
-                ? current($properties[LtiUserService::PROPERTY_USER_LTICONSUMER])->getUri()
-                : '';
-            $user['user_id'] = array_key_exists(LtiUserService::PROPERTY_USER_LTIKEY, $properties)
-                ? (string) current($properties[LtiUserService::PROPERTY_USER_LTIKEY])
-                : '';
-            $users[] = $user;
+            $users[] = $this->getResource($userId);
         }
+
         return $users;
     }
-
-    /**
-     * @return array|object|LtiUserService
-     */
-    public function getLtiUserService()
-    {
-        return $this->getServiceLocator()->get(LtiUserService::SERVICE_ID);
-    }
-
 }

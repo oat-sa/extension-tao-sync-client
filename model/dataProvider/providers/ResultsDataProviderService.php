@@ -24,6 +24,7 @@ use core_kernel_persistence_Exception;
 use oat\taoDelivery\model\execution\DeliveryExecution;
 use oat\taoDelivery\model\execution\ServiceProxy;
 use oat\taoSync\model\dataProvider\AbstractDataProvider;
+use oat\taoSync\model\Result\SyncResultDataFormatter;
 use oat\taoSyncClient\model\syncPackage\SyncPackageService;
 
 /**
@@ -49,11 +50,21 @@ class ResultsDataProviderService extends AbstractDataProvider
     public function getResources(array $deliveryExecutionIds = [])
     {
         $results = [];
+        $formatter = $this->getDeliveryFormatter();
         foreach ($deliveryExecutionIds as $deliveryExecutionId) {
             /** @var DeliveryExecution $deliveryExecution */
-            $results[] = $this->getServiceProxy()->getDeliveryExecution($deliveryExecutionId);
+            $deliveryExecution = $this->getServiceProxy()->getDeliveryExecution($deliveryExecutionId);
+            $results[] = $formatter->format($deliveryExecution);
         }
         return $results;
+    }
+
+    /**
+     * @return SyncResultDataFormatter
+     */
+    private function getDeliveryFormatter()
+    {
+        return $this->getServiceLocator()->get(SyncResultDataFormatter::SERVICE_ID);
     }
 
     /**

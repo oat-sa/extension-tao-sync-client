@@ -21,15 +21,8 @@
 
 namespace oat\taoSyncClient\scripts\update;
 
-
 use common_ext_ExtensionUpdater;
 use common_report_Report;
-use oat\taoSyncClient\model\dataProvider\providers\DeliveryLogDataProviderService;
-use oat\taoSyncClient\model\dataProvider\providers\LtiUserDataProviderService;
-use oat\taoSyncClient\model\dataProvider\providers\ResultsDataProviderService;
-use oat\taoSyncClient\model\dataProvider\providers\TestSessionDataProviderService;
-use oat\taoSyncClient\model\dataProvider\SyncClientDataProviderService;
-use oat\taoSyncClient\model\dataProvider\SyncPackageDataProviderServiceInterface;
 use oat\taoSyncClient\model\downloadService\DirectDownloadService;
 use oat\taoSyncClient\model\downloadService\DownloadServiceInterface;
 use oat\taoSyncClient\model\orgProvider\OrgIdProviderInterface;
@@ -38,22 +31,13 @@ use oat\taoSyncClient\model\syncPackage\migration\RdsMigrationService;
 use oat\taoSyncClient\model\syncPackage\storage\SyncPackageFileSystemStorageService;
 use oat\taoSyncClient\model\syncPackage\SyncPackageInterface;
 use oat\taoSyncClient\model\syncPackage\SyncPackageService;
-use oat\taoSyncClient\model\syncQueue\SyncQueueInterface;
+use oat\taoSyncClient\scripts\install\RegisterServicesDataProviders;
 
 class Updater extends common_ext_ExtensionUpdater
 {
     public function update($initialVersion)
     {
         if ($this->isVersion('0.1.0')) {
-            $this->getServiceManager()->register(SyncPackageDataProviderServiceInterface::SERVICE_ID,
-                new SyncClientDataProviderService([
-                    SyncPackageDataProviderServiceInterface::OPTION_PROVIDERS => [
-                        SyncQueueInterface::PARAM_EVENT_TYPE_DELIVERY_LOG => new DeliveryLogDataProviderService(),
-                        SyncQueueInterface::PARAM_EVENT_TYPE_LTI_USER     => new LtiUserDataProviderService(),
-                        SyncQueueInterface::PARAM_EVENT_TYPE_RESULTS      => new ResultsDataProviderService(),
-                        SyncQueueInterface::PARAM_EVENT_TYPE_TEST_SESSION => new TestSessionDataProviderService(),
-                    ]
-                ]));
             $this->getServiceManager()->register(OrgIdProviderInterface::SERVICE_ID, new TestCenterOrgIdService());
             $this->getServiceManager()->register(
                 SyncPackageInterface::SERVICE_ID,
@@ -70,7 +54,11 @@ class Updater extends common_ext_ExtensionUpdater
             $this->addReport(common_report_Report::createInfo('Added taoPublishing dependency'));
             $this->setVersion('1.0.0');
         }
-
         $this->skip('1.0.0', '1.1.0');
+
+        if ($this->isVersion('1.1.0')) {
+            $this->runExtensionScript(RegisterServicesDataProviders::class);
+            $this->setVersion('1.2.0');
+        }
     }
 }

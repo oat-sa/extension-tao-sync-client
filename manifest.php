@@ -22,6 +22,7 @@
 use \oat\taoSyncClient\scripts\install\RegisterDownloadService;
 use oat\taoSyncClient\scripts\install\RegisterSyncPackageService;
 use oat\taoSyncClient\scripts\install\RegisterSyncQueueRds;
+use oat\taoSyncClient\scripts\install\RegisterServicesDataProviders;
 use oat\taoSyncClient\scripts\install\SetupSyncQueueEventsListener;
 use oat\taoSyncClient\scripts\update\Updater;
 
@@ -30,7 +31,7 @@ return array(
     'label'          => 'Synchronization Client',
     'description'    => 'Synchronization logic specific only for the client server',
     'license'        => 'GPL-2.0',
-    'version'        => '1.1.0',
+    'version'        => '1.2.0',
     'author'         => 'Open Assessment Technologies SA',
     'requires'       => array(
         'tao'           => '>=37.1.1',
@@ -48,6 +49,7 @@ return array(
             RegisterSyncQueueRds::class,
             RegisterSyncPackageService::class,
             SetupSyncQueueEventsListener::class,
+            RegisterServicesDataProviders::class,
         ]
     ),
     'uninstall'      => array(),

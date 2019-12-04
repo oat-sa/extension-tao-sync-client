@@ -21,7 +21,6 @@
 
 namespace oat\taoSyncClient\model\dataProvider\dataFormatter;
 
-use core_kernel_classes_Resource;
 use oat\generis\model\OntologyAwareTrait;
 use oat\taoLti\models\classes\user\LtiUserService;
 use oat\taoSync\export\dataProvider\dataFormatter\AbstractDataFormatter;
@@ -33,7 +32,7 @@ class LtiUser extends AbstractDataFormatter
     /**
      * @inheritDoc
      */
-    public function format(core_kernel_classes_Resource $resource)
+    public function format($resource)
     {
         $properties = $resource->getPropertiesValues([
             $this->getProperty(LtiUserService::PROPERTY_USER_LTICONSUMER),

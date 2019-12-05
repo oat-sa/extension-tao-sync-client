@@ -23,9 +23,10 @@ namespace oat\taoSyncClient\scripts\install;
 
 use oat\oatbox\extension\InstallAction;
 use oat\taoSync\model\dataProvider\AbstractDataProvider;
-use oat\taoSync\model\dataProvider\DataProviderCollection;
 use common_Exception;
+use oat\taoSync\model\dataProvider\SyncDataProviderCollection;
 use oat\taoSyncClient\model\dataProvider\dataFormatter\LtiUser;
+use oat\taoSyncClient\model\dataProvider\dataFormatter\Results;
 use oat\taoSyncClient\model\dataProvider\providers\DeliveryLogDataProviderService;
 use oat\taoSyncClient\model\dataProvider\providers\LtiUserDataProviderService;
 use oat\taoSyncClient\model\dataProvider\providers\ResultsDataProviderService;
@@ -51,14 +52,16 @@ class RegisterServicesDataProviders extends InstallAction
             SyncPackageService::PARAM_LTI_USER => new LtiUserDataProviderService([
                 AbstractDataProvider::OPTION_FORMATTER => new LtiUser()
             ]),
-            SyncPackageService::PARAM_RESULTS => new ResultsDataProviderService(),
+            SyncPackageService::PARAM_RESULTS => new ResultsDataProviderService(
+                [   AbstractDataProvider::OPTION_FORMATTER => new Results()]
+            ),
             SyncPackageService::PARAM_TEST_SESSION => new TestSessionDataProviderService(),
         ];
 
-        $dataProviders = new DataProviderCollection([
-            DataProviderCollection::OPTION_DATA_PROVIDERS => $providers
+        $dataProviders = new SyncDataProviderCollection([
+            SyncDataProviderCollection::OPTION_DATA_PROVIDERS => $providers
         ]);
 
-        $this->getServiceManager()->register(DataProviderCollection::SERVICE_ID, $dataProviders);
+        $this->getServiceManager()->register(SyncDataProviderCollection::SERVICE_ID, $dataProviders);
     }
 }

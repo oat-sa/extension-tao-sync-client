@@ -25,6 +25,7 @@ use common_exception_Error;
 use common_report_Report;
 use oat\oatbox\service\ConfigurableService;
 use oat\taoSync\model\dataProvider\SyncDataProviderCollection;
+use oat\taoSync\package\storage\StorageInterface;
 use oat\taoSync\package\SyncPackageService as SyncPackageStorageService;
 use oat\taoSyncClient\model\exception\SyncClientException;
 use oat\taoSyncClient\model\syncPackage\migration\MigrationInterface;
@@ -99,8 +100,8 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
     private function checkOptions(array $options)
     {
         if (array_key_exists(self::OPTION_STORAGE, $options)
-            && !($options[self::OPTION_STORAGE] instanceof SyncPackageStorageInterface)) {
-            throw new SyncClientException(self::OPTION_STORAGE . ' parameter has to be instance of SyncPackageStorageInterface');
+            && !($options[self::OPTION_STORAGE] instanceof StorageInterface)) {
+            throw new SyncClientException(self::OPTION_STORAGE . ' parameter has to be instance of StorageInterface');
         }
         if (array_key_exists(self::OPTION_MIGRATION, $options)
             && !($options[self::OPTION_MIGRATION] instanceof MigrationInterface)) {

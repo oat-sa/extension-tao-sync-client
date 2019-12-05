@@ -15,42 +15,38 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  * Copyright (c) 2019  (original work) Open Assessment Technologies SA;
+ *
+ * @author Yuri Filippovich
  */
 
-namespace oat\taoSyncClient\model\dataProvider\providers;
+namespace oat\taoSyncClient\model\dataProvider\dataFormatter;
 
-use oat\generis\model\OntologyAwareTrait;
-use oat\taoSync\model\dataProvider\AbstractDataProvider;
-use oat\taoSyncClient\model\syncPackage\SyncPackageService;
+use oat\taoSync\export\dataProvider\dataFormatter\AbstractDataFormatter;
+use oat\taoSync\model\Result\SyncResultDataFormatter;
 
-/**
- * Class LtiUserDataProviderService
- * @package oat\taoSyncClient\model\dataProvider\providers
- */
-class LtiUserDataProviderService extends AbstractDataProvider
+class Results extends AbstractDataFormatter
 {
-    use OntologyAwareTrait;
+    /**
+     * @var SyncResultDataFormatter
+     */
+    private $syncResultDataFormatter;
 
     /**
      * @inheritDoc
      */
-    public function getType()
+    public function format($deliveryExecution)
     {
-        return SyncPackageService::PARAM_LTI_USER;
+        return $this->getDeliveryFormatter()->format($deliveryExecution);
     }
 
     /**
-     * @inheritDoc
+     * @return SyncResultDataFormatter
      */
-    public function getResources(array $usersId = [])
+    private function getDeliveryFormatter()
     {
-        $usersId = array_unique($usersId);
-        $users = [];
-
-        foreach ($usersId as $userId) {
-            $users[] = $this->getResource($userId);
+        if (!$this->syncResultDataFormatter) {
+            $this->syncResultDataFormatter = $this->getServiceLocator()->get(SyncResultDataFormatter::SERVICE_ID);
         }
-
-        return $users;
+        return $this->syncResultDataFormatter;
     }
 }

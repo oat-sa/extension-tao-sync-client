@@ -19,12 +19,9 @@
 
 namespace oat\taoSyncClient\model\dataProvider\providers;
 
-use common_exception_NotFound;
-use core_kernel_persistence_Exception;
 use oat\taoDelivery\model\execution\DeliveryExecution;
 use oat\taoDelivery\model\execution\ServiceProxy;
 use oat\taoSync\model\dataProvider\AbstractDataProvider;
-use oat\taoSync\model\Result\SyncResultDataFormatter;
 use oat\taoSyncClient\model\syncPackage\SyncPackageService;
 
 /**
@@ -44,27 +41,15 @@ class ResultsDataProviderService extends AbstractDataProvider
     /**
      * @param array $deliveryExecutionIds
      * @return array
-     * @throws common_exception_NotFound
-     * @throws core_kernel_persistence_Exception
      */
     public function getResources(array $deliveryExecutionIds = [])
     {
         $results = [];
-        $formatter = $this->getDeliveryFormatter();
         foreach ($deliveryExecutionIds as $deliveryExecutionId) {
             /** @var DeliveryExecution $deliveryExecution */
-            $deliveryExecution = $this->getServiceProxy()->getDeliveryExecution($deliveryExecutionId);
-            $results[] = $formatter->format($deliveryExecution);
+            $results[] = $this->getServiceProxy()->getDeliveryExecution($deliveryExecutionId);
         }
         return $results;
-    }
-
-    /**
-     * @return SyncResultDataFormatter
-     */
-    private function getDeliveryFormatter()
-    {
-        return $this->getServiceLocator()->get(SyncResultDataFormatter::SERVICE_ID);
     }
 
     /**

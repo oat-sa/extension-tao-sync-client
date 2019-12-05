@@ -23,15 +23,22 @@ namespace oat\taoSyncClient\scripts\update;
 
 use common_ext_ExtensionUpdater;
 use common_report_Report;
+use oat\taoSync\model\dataProvider\AbstractDataProvider;
+use oat\taoSync\model\dataProvider\SyncDataProviderCollection;
+use oat\taoSync\package\storage\SyncFileSystem;
+use oat\taoSyncClient\model\dataProvider\dataFormatter\LtiUser;
+use oat\taoSyncClient\model\dataProvider\dataFormatter\Results;
+use oat\taoSyncClient\model\dataProvider\providers\DeliveryLogDataProviderService;
+use oat\taoSyncClient\model\dataProvider\providers\LtiUserDataProviderService;
+use oat\taoSyncClient\model\dataProvider\providers\ResultsDataProviderService;
+use oat\taoSyncClient\model\dataProvider\providers\TestSessionDataProviderService;
 use oat\taoSyncClient\model\downloadService\DirectDownloadService;
 use oat\taoSyncClient\model\downloadService\DownloadServiceInterface;
 use oat\taoSyncClient\model\orgProvider\OrgIdProviderInterface;
 use oat\taoSyncClient\model\orgProvider\providers\TestCenterOrgIdService;
 use oat\taoSyncClient\model\syncPackage\migration\RdsMigrationService;
-use oat\taoSyncClient\model\syncPackage\storage\SyncPackageFileSystemStorageService;
 use oat\taoSyncClient\model\syncPackage\SyncPackageInterface;
 use oat\taoSyncClient\model\syncPackage\SyncPackageService;
-use oat\taoSyncClient\scripts\install\RegisterServicesDataProviders;
 
 class Updater extends common_ext_ExtensionUpdater
 {
@@ -43,7 +50,7 @@ class Updater extends common_ext_ExtensionUpdater
                 SyncPackageInterface::SERVICE_ID,
                 new SyncPackageService([
                     SyncPackageService::OPTION_MIGRATION => new RdsMigrationService([RdsMigrationService::OPTION_PERSISTENCE => 'default']),
-                    SyncPackageService::OPTION_STORAGE   => new SyncPackageFileSystemStorageService(),
+                    SyncPackageService::OPTION_STORAGE   => new SyncFileSystem(),
                 ])
             );
             $this->addReport(common_report_Report::createInfo('Create migrations and storage: php index.php \'oat\taoSyncClient\scripts\install\RegisterSyncPackageService\''));
@@ -57,7 +64,22 @@ class Updater extends common_ext_ExtensionUpdater
         $this->skip('1.0.0', '1.1.0');
 
         if ($this->isVersion('1.1.0')) {
-            $this->runExtensionScript(RegisterServicesDataProviders::class);
+            $providers = [
+                SyncPackageService::PARAM_DELIVERY_LOG => new DeliveryLogDataProviderService(),
+                SyncPackageService::PARAM_LTI_USER => new LtiUserDataProviderService([
+                    AbstractDataProvider::OPTION_FORMATTER => new LtiUser()
+                ]),
+                SyncPackageService::PARAM_RESULTS => new ResultsDataProviderService(
+                    [   AbstractDataProvider::OPTION_FORMATTER => new Results()]
+                ),
+                SyncPackageService::PARAM_TEST_SESSION => new TestSessionDataProviderService(),
+            ];
+
+            $dataProviders = new SyncDataProviderCollection([
+                SyncDataProviderCollection::OPTION_DATA_PROVIDERS => $providers
+            ]);
+
+            $this->getServiceManager()->register(SyncDataProviderCollection::SERVICE_ID, $dataProviders);
             $this->setVersion('1.2.0');
         }
     }

@@ -19,56 +19,38 @@
 
 namespace oat\taoSyncClient\model\dataProvider\providers;
 
-use common_exception_InvalidArgumentType;
-use core_kernel_classes_Resource;
 use oat\generis\model\OntologyAwareTrait;
-use oat\oatbox\service\ConfigurableService;
-use oat\taoLti\models\classes\user\LtiUserService;
-use oat\taoSyncClient\model\dataProvider\SyncPackageDataProviderInterface;
+use oat\taoSync\model\dataProvider\AbstractDataProvider;
+use oat\taoSyncClient\model\syncPackage\SyncPackageService;
 
 /**
  * Class LtiUserDataProviderService
  * @package oat\taoSyncClient\model\dataProvider\providers
  */
-class LtiUserDataProviderService extends ConfigurableService implements SyncPackageDataProviderInterface
+class LtiUserDataProviderService extends AbstractDataProvider
 {
     use OntologyAwareTrait;
 
     /**
-     * @param array $usersId
-     * @return array
-     * @throws common_exception_InvalidArgumentType
+     * @inheritDoc
      */
-    public function getData($usersId = [])
+    public function getType()
     {
-        $usersId = array_unique($usersId);
-        $users = [];
-        foreach ($usersId as $userId) {
-            $user = [];
-            $resource = $this->getResource($userId);
-            /** @var core_kernel_classes_Resource $consumerResource */
-            $properties = $resource->getPropertiesValues([
-                $this->getProperty(LtiUserService::PROPERTY_USER_LTICONSUMER),
-                $this->getProperty(LtiUserService::PROPERTY_USER_LTIKEY),
-            ]);
-            $user['client_user_id'] = $userId;
-            $user['consumer'] = array_key_exists(LtiUserService::PROPERTY_USER_LTICONSUMER, $properties)
-                ? current($properties[LtiUserService::PROPERTY_USER_LTICONSUMER])->getUri()
-                : '';
-            $user['user_id'] = array_key_exists(LtiUserService::PROPERTY_USER_LTIKEY, $properties)
-                ? (string) current($properties[LtiUserService::PROPERTY_USER_LTIKEY])
-                : '';
-            $users[] = $user;
-        }
-        return $users;
+        return SyncPackageService::PARAM_LTI_USER;
     }
 
     /**
-     * @return array|object|LtiUserService
+     * @inheritDoc
      */
-    public function getLtiUserService()
+    public function getResources(array $usersId = [])
     {
-        return $this->getServiceLocator()->get(LtiUserService::SERVICE_ID);
-    }
+        $usersId = array_unique($usersId);
+        $users = [];
 
+        foreach ($usersId as $userId) {
+            $users[] = $this->getResource($userId);
+        }
+
+        return $users;
+    }
 }

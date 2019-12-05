@@ -19,14 +19,21 @@
 
 namespace oat\taoSyncClient\model\dataProvider\providers;
 
-use oat\oatbox\service\ConfigurableService;
-use oat\taoSyncClient\model\dataProvider\SyncPackageDataProviderInterface;
+use oat\taoSync\model\dataProvider\AbstractDataProvider;
+use oat\taoSyncClient\model\syncPackage\SyncPackageService;
 use oat\taoSyncClient\model\syncQueue\SyncQueueInterface;
 
-class TestSessionDataProviderService extends ConfigurableService implements SyncPackageDataProviderInterface
+class TestSessionDataProviderService extends AbstractDataProvider
 {
+    /**
+     * @inheritDoc
+     */
+    public function getType()
+    {
+        return SyncPackageService::PARAM_TEST_SESSION;
+    }
 
-    public function getData($deliveryExecutionIds = [])
+    public function getResources(array $deliveryExecutionIds = [])
     {
         return $this->getValidDeliveryExecutions($deliveryExecutionIds);
     }

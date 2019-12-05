@@ -16,36 +16,37 @@
  *
  * Copyright (c) 2019  (original work) Open Assessment Technologies SA;
  *
- * @author Oleksandr Zagovorychev <zagovorichev@1pt.com>
+ * @author Yuri Filippovich
  */
 
-namespace oat\taoSyncClient\model\syncPackage\storage;
+namespace oat\taoSyncClient\model\dataProvider\dataFormatter;
 
+use oat\taoSync\export\dataProvider\dataFormatter\AbstractDataFormatter;
+use oat\taoSync\model\Result\SyncResultDataFormatter;
 
-use Zend\ServiceManager\ServiceLocatorAwareInterface;
-
-interface SyncPackageStorageInterface extends ServiceLocatorAwareInterface
+class Results extends AbstractDataFormatter
 {
     /**
-     * checks that storage can be used
-     * @return bool
+     * @var SyncResultDataFormatter
      */
-    public function isValid();
+    private $syncResultDataFormatter;
 
     /**
-     * Create new package
-     * @param array $data
-     * @return string|bool package name or false if file can't be created
+     * @inheritDoc
      */
-    public function createPackage($data = []);
+    public function format($deliveryExecution)
+    {
+        return $this->getDeliveryFormatter()->format($deliveryExecution);
+    }
 
     /**
-     * @return void
+     * @return SyncResultDataFormatter
      */
-    public function createStorage();
-
-    /**
-     * @return string
-     */
-    public function getStorageName();
+    private function getDeliveryFormatter()
+    {
+        if (!$this->syncResultDataFormatter) {
+            $this->syncResultDataFormatter = $this->getServiceLocator()->get(SyncResultDataFormatter::SERVICE_ID);
+        }
+        return $this->syncResultDataFormatter;
+    }
 }

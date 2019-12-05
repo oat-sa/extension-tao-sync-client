@@ -25,9 +25,9 @@ use common_report_Report;
 use oat\oatbox\extension\InstallAction;
 use oat\oatbox\filesystem\FileSystemService;
 use oat\oatbox\service\ServiceNotFoundException;
+use oat\taoSync\package\storage\SyncFileSystem;
 use oat\taoSyncClient\model\syncPackage\migration\MigrationInterface;
 use oat\taoSyncClient\model\syncPackage\migration\RdsMigrationService;
-use oat\taoSyncClient\model\syncPackage\storage\SyncPackageFileSystemStorageService;
 use oat\taoSyncClient\model\syncPackage\SyncPackageInterface;
 use oat\taoSyncClient\model\syncPackage\SyncPackageService;
 
@@ -51,7 +51,7 @@ class RegisterSyncPackageService extends InstallAction
         } catch (ServiceNotFoundException $e) {
             $syncPackageService = new SyncPackageService([
                 SyncPackageService::OPTION_MIGRATION => new RdsMigrationService([RdsMigrationService::OPTION_PERSISTENCE => 'default']),
-                SyncPackageService::OPTION_STORAGE   => new SyncPackageFileSystemStorageService(),
+                SyncPackageService::OPTION_STORAGE   => new SyncFileSystem(),
             ]);
             $syncPackageService->setServiceLocator($this->getServiceLocator());
         }

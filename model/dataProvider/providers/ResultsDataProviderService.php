@@ -19,44 +19,37 @@
 
 namespace oat\taoSyncClient\model\dataProvider\providers;
 
-use common_exception_NotFound;
-use core_kernel_persistence_Exception;
-use oat\oatbox\service\ConfigurableService;
 use oat\taoDelivery\model\execution\DeliveryExecution;
 use oat\taoDelivery\model\execution\ServiceProxy;
-use oat\taoSync\model\Result\SyncResultDataFormatter;
-use oat\taoSyncClient\model\dataProvider\SyncPackageDataProviderInterface;
+use oat\taoSync\model\dataProvider\AbstractDataProvider;
+use oat\taoSyncClient\model\syncPackage\SyncPackageService;
 
 /**
  * Class ResultDataProviderService
  * @package oat\taoSyncClient\model\dataProvider\providers
  */
-class ResultsDataProviderService extends ConfigurableService implements SyncPackageDataProviderInterface
+class ResultsDataProviderService extends AbstractDataProvider
 {
     /**
-     * @param array $deliveryExecutionIds
-     * @return array
-     * @throws common_exception_NotFound
-     * @throws core_kernel_persistence_Exception
+     * @inheritDoc
      */
-    public function getData($deliveryExecutionIds = [])
+    public function getType()
     {
-        $results = [];
-        $formatter = $this->getDataFormatter();
-        foreach ($deliveryExecutionIds as $deliveryExecutionId) {
-            /** @var DeliveryExecution $deliveryExecution */
-            $deliveryExecution = $this->getServiceProxy()->getDeliveryExecution($deliveryExecutionId);
-            $results[] = $formatter->format($deliveryExecution);
-        }
-        return $results;
+        return SyncPackageService::PARAM_RESULTS;
     }
 
     /**
-     * @return SyncResultDataFormatter
+     * @param array $deliveryExecutionIds
+     * @return array
      */
-    private function getDataFormatter()
+    public function getResources(array $deliveryExecutionIds = [])
     {
-        return $this->getServiceLocator()->get(SyncResultDataFormatter::SERVICE_ID);
+        $results = [];
+        foreach ($deliveryExecutionIds as $deliveryExecutionId) {
+            /** @var DeliveryExecution $deliveryExecution */
+            $results[] = $this->getServiceProxy()->getDeliveryExecution($deliveryExecutionId);
+        }
+        return $results;
     }
 
     /**

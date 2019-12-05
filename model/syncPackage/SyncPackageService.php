@@ -150,34 +150,35 @@ class SyncPackageService extends ConfigurableService implements SyncPackageInter
     {
 
         $this->report = common_report_Report::createInfo('Package creation started');
-        $dataCount = 0;
-        if ($this->getStorageService()->isValid()) {
-            $queuedTasks = $this->getSyncQueueService()->getTasks($dataTypes, $limit);
+        $queuedTasks = $this->getSyncQueueService()->getTasks($dataTypes, $limit);
 
-            $data = $this->getData($queuedTasks);
+        $data = $this->getData($queuedTasks);
 
-            if (array_key_exists('test_session', $data)) {
-                // excluded tasks won't be marked as migrated
-                $queuedTasks = $this->filterTestSessions($data, $queuedTasks);
-            }
+        if (array_key_exists('test_session', $data)) {
+            // excluded tasks won't be marked as migrated
+            $queuedTasks = $this->filterTestSessions($data, $queuedTasks);
+        }
 
-            $dataCount = count($data);
-            if (!$dataCount || !count($queuedTasks)) {
-                $this->report->add(common_report_Report::createSuccess('There is no data for migration.'));
+        $dataCount = count($data);
+        if (!$dataCount || !count($queuedTasks)) {
+            $this->report->add(common_report_Report::createSuccess('There is no data for migration.'));
+        } else {
+            $packageFileName = self::FILE_PREFIX . '_' . time() . '.json';
+            $isCreated = $this->getStorageService()->createPackage($data, $packageFileName);
+            if ($isCreated) {
+                $this->getMigrationService()->add($packageFileName);
+                $migrationId = $this->getMigrationService()->getMigrationIdByPackage($packageFileName);
+                $migratedCount = $this->getSyncQueueService()->markAsMigrated($migrationId, $queuedTasks);
+                $this->report->add(
+                    common_report_Report::createSuccess(
+                        $this->getReportMessage($migrationId, $packageFileName, $migratedCount)
+                    )
+                );
             } else {
-                $fileName = self::FILE_PREFIX .'_' .'_'. time() . '.json';
-                $packageFileName = $this->getStorageService()->createPackage($data, $fileName);
-                if ($packageFileName) {
-                    $this->getMigrationService()->add($packageFileName);
-                    $migrationId = $this->getMigrationService()->getMigrationIdByPackage($packageFileName);
-                    $migratedCount = $this->getSyncQueueService()->markAsMigrated($migrationId, $queuedTasks);
-                    $this->report->add(common_report_Report::createSuccess($this->getReportMessage($migrationId,
-                        $packageFileName, $migratedCount)));
-                } else {
-                    $this->report->add(common_report_Report::createFailure('Package file can not be created'));
-                }
+                $this->report->add(common_report_Report::createFailure('Package file can not be created'));
             }
         }
+
 
         return $dataCount;
     }

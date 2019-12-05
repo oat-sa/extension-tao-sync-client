@@ -147,8 +147,10 @@ class GeneratePackage extends ScriptAction
         /** @var SyncPackageService */
         $packageService = $this->getSyncPackageService();
         do {
-            $count = $packageService->create($this->getRequiredDataTypes(),
-                $this->getOption(SyncPackageService::PARAM_LIMIT));
+            $count = $packageService->create(
+                $this->getRequiredDataTypes(),
+                $this->getOption(SyncPackageService::PARAM_LIMIT)
+            );
             $this->report->add($packageService->getReport());
         } while ($count && $this->hasOption(self::OPTION_MIGRATE_EVERYTHING));
         $this->report->add(common_report_Report::createSuccess('Done'));

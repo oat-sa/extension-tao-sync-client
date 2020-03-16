@@ -30,7 +30,7 @@ class DeliveryLogDataProviderTest extends TestCase
 {
     public function testGetData()
     {
-        $deliveryLogService = $this->getMock(DeliveryLog::class);
+        $deliveryLogService = $this->createMock(DeliveryLog::class);
         $deliveryLogService->method('search')->willReturn(['1234']);
         $serviceLocator = $this->getServiceLocatorMock([
             DeliveryLog::SERVICE_ID => $deliveryLogService,

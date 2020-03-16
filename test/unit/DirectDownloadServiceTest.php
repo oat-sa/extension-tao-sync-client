@@ -29,8 +29,8 @@ class DirectDownloadServiceTest extends TestCase
 {
 
     private $service;
-    public function setup(){
-        $publishingTest = $this->getMock(PublishingService::class);
+    public function setUp(): void{
+        $publishingTest = $this->createMock(PublishingService::class);
         $publishingTest->method('callEnvironment')->willReturn(true);
         $serviceLocator = $this->getServiceLocatorMock([
             PublishingService::SERVICE_ID => $publishingTest,

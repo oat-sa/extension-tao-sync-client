@@ -74,11 +74,11 @@ class SyncClientDataProviderServiceTest extends TestCase
     /**
      * @throws ReflectionException
      * @throws SyncClientException
-     * @expectedException \oat\taoSyncClient\model\exception\SyncClientException
-     * @expectedExceptionMessage Incorrect task format #0
      */
     public function testGetDataExceptionTaskFormat()
     {
+        $this->expectException(SyncClientException::class);
+        $this->expectExceptionMessage('Incorrect task format #0');
         $providerService = new SyncClientDataProviderService();
         $providerService->getData([
             [SyncQueueStorageInterface::PARAM_EVENT_TYPE => 'typeName']
@@ -88,11 +88,11 @@ class SyncClientDataProviderServiceTest extends TestCase
     /**
      * @throws ReflectionException
      * @throws SyncClientException
-     * @expectedExceptionMessage Data providers not configured
-     * @expectedException \oat\taoSyncClient\model\exception\SyncClientException
      */
     public function testGetDataExceptionNoProvider()
     {
+        $this->expectException(SyncClientException::class);
+        $this->expectExceptionMessage('Data providers not configured');
         $providerService = new SyncClientDataProviderService();
         $providerService->getData([
             [
@@ -105,11 +105,11 @@ class SyncClientDataProviderServiceTest extends TestCase
     /**
      * @throws ReflectionException
      * @throws SyncClientException
-     * @expectedExceptionMessage Data provider typeName is not defined
-     * @expectedException \oat\taoSyncClient\model\exception\SyncClientException
      */
     public function testGetDataExceptionNoSuitableProvider()
     {
+        $this->expectException(SyncClientException::class);
+        $this->expectExceptionMessage('Data provider typeName is not defined');
         $providerService = new SyncClientDataProviderService([
             SyncClientDataProviderService::OPTION_PROVIDERS => [
                 'typeName2' => Provider::class,
@@ -126,11 +126,11 @@ class SyncClientDataProviderServiceTest extends TestCase
     /**
      * @throws ReflectionException
      * @throws SyncClientException
-     * @expectedExceptionMessage Type typeName has to implement interface oat\taoSyncClient\model\dataProvider\SyncPackageDataProviderInterface
-     * @expectedException \oat\taoSyncClient\model\exception\SyncClientException
      */
     public function testGetDataExceptionIncorrectProviderClass()
     {
+        $this->expectException(SyncClientException::class);
+        $this->expectExceptionMessage('Type typeName has to implement interface oat\taoSyncClient\model\dataProvider\SyncPackageDataProviderInterface');
         $providerService = new SyncClientDataProviderService([
             SyncClientDataProviderService::OPTION_PROVIDERS => [
                 'typeName' => 'class::provider',
@@ -147,11 +147,11 @@ class SyncClientDataProviderServiceTest extends TestCase
     /**
      * @throws ReflectionException
      * @throws SyncClientException
-     * @expectedExceptionMessage Type typeName has to implement interface oat\taoSyncClient\model\dataProvider\SyncPackageDataProviderInterface
-     * @expectedException \oat\taoSyncClient\model\exception\SyncClientException
      */
     public function testGetDataExceptionIncorrectProviderInterface()
     {
+        $this->expectException(SyncClientException::class);
+        $this->expectExceptionMessage('Type typeName has to implement interface oat\taoSyncClient\model\dataProvider\SyncPackageDataProviderInterface');
         $providerService = new SyncClientDataProviderService([
             SyncClientDataProviderService::OPTION_PROVIDERS => [
                 'typeName' => stdClass::class,

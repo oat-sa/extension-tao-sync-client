@@ -30,7 +30,7 @@ class TestSessionDataProviderTest extends TestCase
 {
     public function testGetData()
     {
-        $syncQueueService = $this->getMock(SyncQueueInterface::class);
+        $syncQueueService = $this->createMock(SyncQueueInterface::class);
         $syncQueueService->method('isDeliveryLogSynchronized')->willReturnCallback(static function($val) {
             return $val !== 2;
         });

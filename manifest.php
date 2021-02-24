@@ -30,15 +30,7 @@ return array(
     'label'          => 'Synchronization Client',
     'description'    => 'Synchronization logic specific only for the client server',
     'license'        => 'GPL-2.0',
-    'version'        => '1.3.0',
     'author'         => 'Open Assessment Technologies SA',
-    'requires'       => array(
-        'generis'       => '>=12.15.0',
-        'tao'           => '>=37.1.1',
-        'taoLti'        => '>=10.1.0',
-        'taoProctoring' => '>=16.4.0',
-        'taoPublishing' => '>=2.1.1'
-    ),
     'managementRole' => 'http://www.tao.lu/Ontologies/generis.rdf#taoSyncClientManager',
     'acl'            => array(
         array('grant', 'http://www.tao.lu/Ontologies/generis.rdf#taoSyncClientManager', array('ext' => 'taoSyncClient')),
